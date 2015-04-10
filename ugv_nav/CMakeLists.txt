@@ -103,14 +103,14 @@ include_directories(
 # )
 
 ## Declare a cpp executable
-add_executable(test_data_send src/test_data_send.cpp)
+add_executable(data_send src/data_send.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(ugv_nav_node ugv_nav_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(test_data_send ${catkin_LIBRARIES})
+ target_link_libraries(data_send ${catkin_LIBRARIES})
 
 #############
 ## Install ##
