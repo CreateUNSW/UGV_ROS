@@ -1,0 +1,26 @@
+#include <stdlib.h>
+#include <bitset>
+#include <iostream>
+
+using namespace std;
+
+int main(int argc, char** argv){
+   float theta;
+   float r; 
+
+   theta = atof(argv[1]);
+   r = atof(argv[2]);
+
+   char* theta_b = (char*) &theta;
+   char* r_b= (char*) &r;
+
+   cout.write(theta_b,4);
+   cout.write(r_b,4);
+   cout <<endl;
+
+
+
+
+   return 0;
+
+}
