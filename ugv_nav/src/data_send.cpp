@@ -22,7 +22,12 @@ int main(int argc, char** argv){
 
    // Set up the Com Port
    fstream comPort;
-   comPort.open("/dev/ttyACM1");
+   if (argc > 1)
+      comPort.open(argv[1]);
+   else {
+      ROS_INFO("Usage: please give the comport to communicate on as the first argument");
+      return 1;
+   }
 
    // Loop until this node is stopped (using ctrl-c)
    while(ros::ok()){
@@ -34,6 +39,8 @@ int main(int argc, char** argv){
       // Get the data
       ros::param::getCached("/heading", theta_d);
       ros::param::getCached("/magnitude", r_d);
+      ROS_INFO_STREAM("theta " << theta_d << " mag " << r_d);
+      
       
       // Data is stored as doubles, convert it to floats
       theta = (float) theta_d;
@@ -51,8 +58,8 @@ int main(int argc, char** argv){
       //cout << "theta =  " theta << " magnitude = " << r << endl;
 
       // Sleep until the next iteration of this loop
-      ros::spinOnce();
       rate.sleep();
+      ros::spinOnce();
    }
 
    // All done
