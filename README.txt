@@ -9,3 +9,7 @@ Create a catkin workspace using the instructions at this site: http://wiki.ros.o
 Clone this repository into (your_catkin_ws)/src
 
 All done! Use rosrun or roslaunch to start running programs
+
+A quick note about dependencies:
+ - controller_get needs to have output piped to it from 'xboxdrv -d --quiet'
+   (http://pingus.seul.org/~grumbel/xboxdrv/)
