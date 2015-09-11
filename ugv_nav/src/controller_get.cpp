@@ -8,6 +8,9 @@
 #include <ros/ros.h>
 #include <cmath>
 //#include <ctgmath>
+#include <ctime>
+
+#define KILL_TIMER 60.0
 
 using namespace std;
 
@@ -16,9 +19,19 @@ int main(int argc, char** argv){
    ros::init(argc, argv, "con_get");
    ros::NodeHandle n;
 
+   time_t startTime;
+   time(&startTime);
+   time_t curTime;
+
    string line;
 
    while(1){
+      time(&curTime);
+      if (difftime(curTime, startTime) > KILL_TIMER && KILL_TIMER > 0.0) {
+          cerr << "Your " << KILL_TIMER << " seconds are up. Killing node!" << endl;
+          cerr << "Change KILL_TIMER to 0.0 to disable this behaviour" << endl;
+          return (1);
+      }
       int num[21];
       cin.ignore(100,':');
       for (int i = 0; i < 21; i++){
