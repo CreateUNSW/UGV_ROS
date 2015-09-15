@@ -13,3 +13,8 @@ All done! Use rosrun or roslaunch to start running programs
 A quick note about dependencies:
  - controller_get needs to have output piped to it from 'xboxdrv -d --quiet'
    (http://pingus.seul.org/~grumbel/xboxdrv/)
+
+source dev/setup.bash in 3 terminals
+in first terminal run: roscore
+in second terminal run: sudo xboxdrv --detach-kernel-driver --quiet | rosrun ugv_nav controller_get
+in third terminal run: rosrun ugv_nav motordata_send /dev/ttyACM0
