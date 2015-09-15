@@ -10,7 +10,7 @@
 //#include <ctgmath>
 #include <ctime>
 
-#define KILL_TIMER 60.0
+#define KILL_TIMER 0.0
 
 using namespace std;
 
@@ -25,7 +25,7 @@ int main(int argc, char** argv){
 
    string line;
 
-   while(1){
+   while(ros::ok()){
       time(&curTime);
       if (difftime(curTime, startTime) > KILL_TIMER && KILL_TIMER > 0.0) {
           cerr << "Your " << KILL_TIMER << " seconds are up. Killing node!" << endl;
@@ -43,7 +43,7 @@ int main(int argc, char** argv){
          stringstream ss;
          ss.str (str);
          ss >> num[i];
-         //cout << num[i];
+         cout << num[i];
       }
       //cout << endl;
       // Put this data into /heading and /magnitude

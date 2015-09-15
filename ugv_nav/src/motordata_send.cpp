@@ -36,6 +36,10 @@ int main(int argc, char** argv){
       ROS_INFO("Usage: please give the comport to communicate on as the first argument (i.e. /dev/ttyACM0)");
       return 1;
    }
+	
+
+	//comPort.write("[hales]", 7);
+      //comPort.flush();
 
    // Loop until this node is stopped (using ctrl-c)
    while(ros::ok()){
@@ -54,17 +58,19 @@ int main(int argc, char** argv){
       //  * Half the range is dedicated to turning
       int forward = floor(r_d * cos(theta_d) * MOTORDRIVER_RANGE_MAX/2.0);
       int turn = floor(r_d * sin(theta_d) * MOTORDRIVER_RANGE_MAX/2.0);
-      int leftMotorVal = forward + ((turn>=0)?turn:-1*turn);
-      int rightMotorVal = forward + ((turn>=0)?-1*turn:turn);
+      int leftMotorVal = forward + turn;
+      int rightMotorVal = forward - turn;
       char leftMotorSign = (leftMotorVal >= 0) ? '+' : '-';
-      char rightMotorSign = (leftMotorVal >= 0) ? '+' : '-';
+      char rightMotorSign = (rightMotorVal >= 0) ? '+' : '-';
       leftMotorVal = abs(leftMotorVal);
       rightMotorVal = abs(rightMotorVal);
 
-      char buffer[MOTORDRIVER_COMBUFFER_LENGTH];
-      snprintf(buffer, MOTORDRIVER_COMBUFFER_LENGTH, "[%c%2x%c%2x:00]", leftMotorSign, leftMotorVal, rightMotorSign, rightMotorVal);
-      char checksum = calculateChecksum(&buffer[1], MOTORDRIVER_COMBUFFER_MSGLENGTH);
-      snprintf(&buffer[(MOTORDRIVER_COMBUFFER_LENGTH - MOTORDRIVER_COMBUFFER_CHKSUMDISTFROMEND)], MOTORDRIVER_COMBUFFER_CHKSUMLENGTH, "%2x", checksum);
+      char buffer[MOTORDRIVER_COMBUFFER_LENGTH+1];
+      char message[MOTORDRIVER_COMBUFFER_MSGLENGTH+1];
+      snprintf(message, MOTORDRIVER_COMBUFFER_MSGLENGTH+1, "%c%2.2x%c%2.2x", leftMotorSign, leftMotorVal, rightMotorSign, rightMotorVal);
+      unsigned char checksum = calculateChecksum(message, MOTORDRIVER_COMBUFFER_MSGLENGTH);
+      snprintf(buffer,MOTORDRIVER_COMBUFFER_LENGTH+1,"[%s:%2.2x]",message,checksum);
+      printf("%.*s\n", MOTORDRIVER_COMBUFFER_LENGTH, buffer);
 
       // Write these bytes to the Com Port
       comPort.write(buffer, MOTORDRIVER_COMBUFFER_LENGTH);
