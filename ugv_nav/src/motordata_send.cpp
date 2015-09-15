@@ -38,8 +38,8 @@ int main(int argc, char** argv){
    }
 	
 
-	//comPort.write("[hales]", 7);
-      //comPort.flush();
+//	comPort.write("[hales]", 7);
+      comPort.flush();
 
    // Loop until this node is stopped (using ctrl-c)
    while(ros::ok()){
@@ -53,28 +53,42 @@ int main(int argc, char** argv){
       ros::param::getCached("/magnitude", r_d);
       ROS_INFO_STREAM("theta " << theta_d << " mag " << r_d);
       
-      // Convert to motor coordinates
-      //  * Half the range is dedicated to forward motion
-      //  * Half the range is dedicated to turning
-      int forward = floor(r_d * cos(theta_d) * MOTORDRIVER_RANGE_MAX/2.0);
-      int turn = floor(r_d * sin(theta_d) * MOTORDRIVER_RANGE_MAX/2.0);
-      int leftMotorVal = forward + turn;
-      int rightMotorVal = forward - turn;
-      char leftMotorSign = (leftMotorVal >= 0) ? '+' : '-';
-      char rightMotorSign = (rightMotorVal >= 0) ? '+' : '-';
-      leftMotorVal = abs(leftMotorVal);
-      rightMotorVal = abs(rightMotorVal);
+      int leftMotorVal, rightMotorVal;
+      char leftMotorSign, rightMotorSign;
+	// new driving maths coming from old UGV_sketch
+	
+	if(theta_d<=M_PI/4&&theta_d>=-3*M_PI/4){
+		rightMotorSign = '+';
+	} else {
+		rightMotorSign = '-';
+	}
+	if(theta_d<=3*M_PI/4&&theta_d>=-M_PI/4){
+		leftMotorSign = '+';
+	} else {
+		leftMotorSign = '-';
+	}
+	if(theta_d>=0){
+		leftMotorVal = fmin(M_PI/4, fabs(3*M_PI/4-theta_d))*255/(M_PI/4);
+		rightMotorVal = fmin(M_PI/4, fabs(M_PI/4-theta_d))*255/(M_PI/4);
+	} else {
+		leftMotorVal = fmin(M_PI/4, fabs(M_PI/4+theta_d))*255/(M_PI/4);
+		rightMotorVal = fmin(M_PI/4, fabs(3*M_PI/4+theta_d))*255/(M_PI/4);
+	}
+	leftMotorVal = fmin(leftMotorVal*r_d,255);
+	rightMotorVal = fmin(rightMotorVal*r_d,255);
 
       char buffer[MOTORDRIVER_COMBUFFER_LENGTH+1];
       char message[MOTORDRIVER_COMBUFFER_MSGLENGTH+1];
-      snprintf(message, MOTORDRIVER_COMBUFFER_MSGLENGTH+1, "%c%2.2x%c%2.2x", leftMotorSign, leftMotorVal, rightMotorSign, rightMotorVal);
+      snprintf(message, MOTORDRIVER_COMBUFFER_MSGLENGTH+1, "%c%2.2X%c%2.2X", leftMotorSign, leftMotorVal, rightMotorSign, rightMotorVal);
       unsigned char checksum = calculateChecksum(message, MOTORDRIVER_COMBUFFER_MSGLENGTH);
-      snprintf(buffer,MOTORDRIVER_COMBUFFER_LENGTH+1,"[%s:%2.2x]",message,checksum);
+      snprintf(buffer,MOTORDRIVER_COMBUFFER_LENGTH+1,"[%s:%2.2X]",message,checksum);
       printf("%.*s\n", MOTORDRIVER_COMBUFFER_LENGTH, buffer);
 
       // Write these bytes to the Com Port
-      comPort.write(buffer, MOTORDRIVER_COMBUFFER_LENGTH);
-      comPort.flush();
+	if(r_d>0.15){
+		comPort.write(buffer, MOTORDRIVER_COMBUFFER_LENGTH);
+		comPort.flush();
+	}
 
       //cout << "theta =  " theta << " magnitude = " << r << endl;
 
