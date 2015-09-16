@@ -117,7 +117,7 @@ add_executable(motordata_arduino_send src/motordata_arduino_send.cpp)
  target_link_libraries(data_send ${catkin_LIBRARIES})
  target_link_libraries(controller_get ${catkin_LIBRARIES})
  target_link_libraries(motordata_send ${catkin_LIBRARIES} sharedLib)
- target_link_libraries(motordara_arduino_send ${catkin_LIBRARIES})
+ target_link_libraries(motordata_arduino_send ${catkin_LIBRARIES})
 
 #############
 ## Install ##
