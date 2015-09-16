@@ -17,4 +17,6 @@ A quick note about dependencies:
 source dev/setup.bash in 3 terminals
 in first terminal run: roscore
 in second terminal run: sudo xboxdrv --detach-kernel-driver --quiet | rosrun ugv_nav controller_get
-in third terminal run: rosrun ugv_nav motordata_send /dev/ttyACM0
+in third terminal run: rosrun ugv_nav motordata_arduino_send /dev/ttyACM0
+
+if arduino has used a different port, in third terminal run: ls /dev | grep ttyACM
