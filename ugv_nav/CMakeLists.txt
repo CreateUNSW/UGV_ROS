@@ -107,6 +107,7 @@ add_library(sharedLib src/shared/shared.cpp)
 add_executable(data_send src/data_send.cpp)
 add_executable(controller_get src/controller_get.cpp)
 add_executable(motordata_send src/motordata_send.cpp)
+add_executable(motordata_arduino_send src/motordata_arduino_send.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -116,6 +117,7 @@ add_executable(motordata_send src/motordata_send.cpp)
  target_link_libraries(data_send ${catkin_LIBRARIES})
  target_link_libraries(controller_get ${catkin_LIBRARIES})
  target_link_libraries(motordata_send ${catkin_LIBRARIES} sharedLib)
+ target_link_libraries(motordara_arduino_send ${catkin_LIBRARIES})
 
 #############
 ## Install ##
