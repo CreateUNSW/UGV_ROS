@@ -5,7 +5,7 @@
 #include <ros/ros.h>
 #include <ros/rate.h>
 #include <cmath>
-#include <cstlib>
+#include <string>
 #include "shared/shared.hpp"
 
 #define MOTORDRIVER_RANGE_MAX 255
@@ -37,8 +37,14 @@ int main(int argc, char** argv){
       ROS_INFO("Usage: please give the comport to communicate on as the first argument (i.e. /dev/ttyACM0)");
       return 1;
    }*/
-   system("stty -F /dev/ttyACM0 cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts"); //Activates the tty connection with the Arduino
-   ofstream comPort("/dev/ttyACM0");
+   if (argc <= 1) {
+      ROS_INFO("Usage: please give the comport to communicate on as the first argument (i.e. /dev/ttyACM0)");
+      return 1;
+   }
+   string setupString;
+   setupString << "stty -F " << argv[1] << " cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts";
+   system(setupString.c_str()); //Activates the tty connection with the Arduino
+   ofstream comPort(argv[1]);
    long int t = time(NULL);
    while (time(NULL)-t < 5) {};
 
