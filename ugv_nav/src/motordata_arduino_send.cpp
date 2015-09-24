@@ -6,6 +6,8 @@
 #include <ros/rate.h>
 #include <cmath>
 #include "shared/shared.hpp"
+#include <message_filters/subscriber.h>
+#include "ugv_nav/Movement.h"
 
 #define MOTORDRIVER_RANGE_MAX 255
 #define MOTORDRIVER_COMBUFFER_MSGLENGTH 6
@@ -20,52 +22,48 @@ using namespace std;
  * convert them to motor driver input and send them to
  * comport /dev/ttyACM0. It does this 100 times per second */
 
-int main(int argc, char** argv){
-   // Initialising the ros node
-   ros::init(argc, argv, "motornav_com");
-   ros::NodeHandle n;
+class Motornav_Com {
+public:
+    Motornav_Com(ros::NodeHandle n, char** argv) : n{n} {
 
-   // Set up the rate of 100 Hz
-   ros::Rate rate(10); // I haven't tested this past 10 Hz, 30 Hz causes it to fail
+        movement_sub = n.subscribe("ugv_nav/movement", 1, &Motornav_Com::movement_callback, this);
 
-   // Set up the Com Port
-   /*fstream comPort;
-   if (argc > 1)
-      comPort.open(argv[1]);
-   else {
-      ROS_INFO("Usage: please give the comport to communicate on as the first argument (i.e. /dev/ttyACM0)");
-      return 1;
-   }*/
-   if (argc <= 1) {
-      ROS_INFO("Usage: please give the comport to communicate on as the first argument (i.e. /dev/ttyACM0)");
-      return 1;
-   }
-   char setupString[200];
-   strcpy(setupString, "stty -F ");
-   strcat(setupString, argv[1]);
-   strcat(setupString, " cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts");
-   system(setupString); //Activates the tty connection with the Arduino
-   ofstream comPort(argv[1]);
-   long int t = time(NULL);
-   while (time(NULL)-t < 5) {};
+        char setupString[200];
+        strcpy(setupString, "stty -F ");
+        strcat(setupString, argv[1]);
+        strcat(setupString, " cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts");
+        system(setupString); //Activates the tty connection with the Arduino
+        comPort.open(argv[1]);
+        long int t = time(NULL);
+        while (time(NULL)-t < 5) {};
 
-//	comPort.write("[hales]", 7);
-      comPort.flush();
+        //	comPort.write("[hales]", 7);
+        comPort.flush();
+    }
+private:
+    ros::NodeHandle n;
+    ros::Subscriber movement_sub;
 
-   // Loop until this node is stopped (using ctrl-c)
-   while(ros::ok()){
-      float theta;
-      float r; 
-      double theta_d;
-      double r_d; 
+    ofstream comPort;
 
+    float theta;
+    float r; 
+    double theta_d;
+    double r_d; 
+
+    int leftMotorVal, rightMotorVal;
+    char leftMotorSign, rightMotorSign;
+
+    void movement_callback(const ugv_nav::Movement::ConstPtr& msg);
+};
+
+void Motornav_Com::movement_callback(const ugv_nav::Movement::ConstPtr& msg) {
       // Get the data
-      ros::param::getCached("/heading", theta_d);
-      ros::param::getCached("/magnitude", r_d);
+      theta_d = msg->heading;
+      r_d = msg->magnitude;
+      
       ROS_INFO_STREAM("theta " << theta_d << " mag " << r_d);
       
-      int leftMotorVal, rightMotorVal;
-      char leftMotorSign, rightMotorSign;
 	// new driving maths coming from old UGV_sketch
 	
 	if(theta_d<=M_PI/4&&theta_d>=-3*M_PI/4){
@@ -100,15 +98,22 @@ int main(int argc, char** argv){
 		comPort.write(buffer, MOTORDRIVER_COMBUFFER_LENGTH);
 		comPort.flush();
 	}
+}
 
-      //cout << "theta =  " theta << " magnitude = " << r << endl;
+int main(int argc, char** argv){
+   // Initialising the ros node
+   ros::init(argc, argv, "motornav_com");
+   ros::NodeHandle n;
 
-      // Sleep until the next iteration of this loop
-      rate.sleep();
-      ros::spinOnce();
-   }
+   // Set up the rate of 100 Hz
+   ros::Rate rate(10); // I haven't tested this past 10 Hz, 30 Hz causes it to fail
 
-   // All done
+    if (argc <= 1) {
+        ROS_INFO("Usage: please give the comport to communicate on as the first argument (i.e. /dev/ttyACM0)");
+        return 1;
+    }
+  
+   Motornav_Com mnc(n, argv);
+   ros::spin();
    return 0;
-
 }

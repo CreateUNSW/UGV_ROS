@@ -10,6 +10,8 @@
 //#include <ctgmath>
 #include <ctime>
 
+#include "ugv_nav/Movement.h"
+
 #define KILL_TIMER 0.0
 
 using namespace std;
@@ -24,6 +26,11 @@ int main(int argc, char** argv){
    time_t curTime;
 
    string line;
+
+   // Message to publish
+    ugv_nav::Movement movement_msg;
+    ros::Publisher movement_publisher = n.advertise<ugv_nav::Movement>("/ugv_nav/movement", 1);
+
 
    while(ros::ok()){
       time(&curTime);
@@ -49,14 +56,20 @@ int main(int argc, char** argv){
       // Put this data into /heading and /magnitude
       // X1 and Y1 are the ones we want
       if (num[1] >= 0){
-         n.setParam("heading",atan(num[0]/(float)num[1]));
+         movement_msg.heading = atan(num[0]/(float)num[1]);
+         //n.setParam("heading",atan(num[0]/(float)num[1]));
       } else if (num[0] >= 0) {
-         n.setParam("heading",3.14159 + atan(num[0]/(float)num[1]));
+         movement_msg.heading = 3.14159 + atan(num[0]/(float)num[1]);
+         //n.setParam("heading",3.14159 + atan(num[0]/(float)num[1]));
       } else {
-         n.setParam("heading", -3.14159 + atan(num[0]/(float)num[1]));
+         //n.setParam("heading", -3.14159 + atan(num[0]/(float)num[1]));
+         movement_msg.heading = -3.14159 + atan(num[0]/(float)num[1]);
       }
 
-      n.setParam("magnitude",sqrt(num[0]*num[0] + num[1]*num[1])/32768.0);
+      movement_msg.magnitude = sqrt((num[0]*num[0] + num[1]*num[1])/32768.0);
+      //n.setParam("magnitude",sqrt(num[0]*num[0] + num[1]*num[1])/32768.0);
+
+      movement_publisher.publish(movement_msg);
       ros::spinOnce();
    }
    return (0);
