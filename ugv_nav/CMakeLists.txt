@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -44,11 +45,10 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+   FILES
+   Movement.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -64,11 +64,11 @@ find_package(catkin REQUIRED COMPONENTS
 #   Action2.action
 # )
 
-## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+# Generate added messages and services with any dependencies listed here
+generate_messages(
+   DEPENDENCIES
+   std_msgs
+)
 
 ###################################
 ## catkin specific configuration ##
@@ -81,8 +81,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES ugv_nav
-CATKIN_DEPENDS roscpp rospy std_msgs
+  LIBRARIES ugv_nav
+CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -111,7 +111,8 @@ add_executable(motordata_arduino_send src/motordata_arduino_send.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(ugv_nav_node ugv_nav_generate_messages_cpp)
+add_dependencies(controller_get ugv_nav_generate_messages_cpp)
+add_dependencies(motordata_arduino_send ugv_nav_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(data_send ${catkin_LIBRARIES})
@@ -164,3 +165,13 @@ add_executable(motordata_arduino_send src/motordata_arduino_send.cpp)
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+## C++11 Compatability
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+    execute_process(
+        COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
+        
+    if (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7)
+		SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11" )
+    endif ()
+endif ()
