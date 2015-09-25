@@ -81,7 +81,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES ugv_nav
+  LIBRARIES ugv_nav
 CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
 #  DEPENDS system_lib
 )
@@ -111,7 +111,8 @@ add_executable(motordata_arduino_send src/motordata_arduino_send.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(ugv_nav_node ugv_nav_generate_messages_cpp)
+add_dependencies(controller_get ugv_nav_generate_messages_cpp)
+add_dependencies(motordata_arduino_send ugv_nav_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(data_send ${catkin_LIBRARIES})

@@ -66,7 +66,7 @@ int main(int argc, char** argv){
          movement_msg.heading = -3.14159 + atan(num[0]/(float)num[1]);
       }
 
-      movement_msg.magnitude = sqrt((num[0]*num[0] + num[1]*num[1])/32768.0);
+      movement_msg.magnitude = sqrt(num[0]*num[0] + num[1]*num[1])/32768.0;
       //n.setParam("magnitude",sqrt(num[0]*num[0] + num[1]*num[1])/32768.0);
 
       movement_publisher.publish(movement_msg);
