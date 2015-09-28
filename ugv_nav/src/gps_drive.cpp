@@ -9,6 +9,7 @@
 #include "shared/shared.hpp"
 #include <message_filters/subscriber.h>
 #include <sensor_msgs/NavSatFix.h>
+#include <sensor_msgs/MagneticField.h>
 #include "ugv_nav/Movement.h"
 
 using namespace std;
@@ -24,17 +25,23 @@ public:
 private:
    ros::NodeHandle n;
    ros::Subscriber phone_gps_sub;
+	ros::Subscriber phone_mag_sub;
 
    double source_latitude;
    double source_longitude;
+	double x_mag;
+	double y_mag;
    // Village green
    double destination_latitude = -33.918172;
    double destination_longitude = 151.227975;
+
    void gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg);
+	void mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg);
 };
 
 GPS_Drive::GPS_Drive(ros::NodeHandle n) : n{n} {
    phone_gps_sub = n.subscribe("/phone1/android/fix", 1, &GPS_Drive::gps_callback, this);
+	phone_mag_sub = n.subscribe("/phone1/android/magnetic_field", 1, &GPS_Drive::mag_callback, this);
 }
 
 void GPS_Drive::gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
@@ -49,8 +56,15 @@ void GPS_Drive::gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
    double difference_angle = atan2(difference_long, difference_lat);
    double difference_angle_deg = difference_angle*180.0/M_PI;
    double distance = sqrt(difference_lat*difference_lat+difference_long*difference_long)*111000.0;
-   printf("Global angle to our destination %lf", difference_angle_deg);
-   printf("Distance to our destination %lf", distance);
+   printf("Global angle to our destination %lf\n", difference_angle_deg);
+   printf("Distance to our destination %lf\n", distance);
+}
+
+void GPS_Drive::mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg){
+	x_mag = msg->magnetic_field.x;
+	y_mag = msg->magnetic_field.y;
+	double current_heading = atan2(x_mag,y_mag)*180.0/M_PI;
+	printf("Our current heading %lf\n", current_heading);
 }
 
 int main(int argc, char** argv) {
