@@ -77,11 +77,13 @@ void Motornav_Com::sendMovement() {
 	} else {
 		rightMotorSign = '-';
 	}
+
 	if(theta_d<=3*M_PI/4&&theta_d>=-M_PI/4){
 		leftMotorSign = '+';
 	} else {
 		leftMotorSign = '-';
 	}
+
 	if(theta_d>=0){
 		leftMotorVal = fmin(M_PI/4, fabs(3*M_PI/4-theta_d))*255/(M_PI/4);
 		rightMotorVal = fmin(M_PI/4, fabs(M_PI/4-theta_d))*255/(M_PI/4);
@@ -89,6 +91,7 @@ void Motornav_Com::sendMovement() {
 		leftMotorVal = fmin(M_PI/4, fabs(M_PI/4+theta_d))*255/(M_PI/4);
 		rightMotorVal = fmin(M_PI/4, fabs(3*M_PI/4+theta_d))*255/(M_PI/4);
 	}
+
 	leftMotorVal = fmin(leftMotorVal*r_d,255);
 	rightMotorVal = fmin(rightMotorVal*r_d,255);
 
@@ -99,8 +102,8 @@ void Motornav_Com::sendMovement() {
    snprintf(buffer,MOTORDRIVER_COMBUFFER_LENGTH+1,"[%s:%2.2X]",message,checksum);
    printf("%.*s\n", MOTORDRIVER_COMBUFFER_LENGTH, buffer);
 
-      // Write these bytes to the Com Port
-	if(r_d>0.1) {
+   // Write these bytes to the Com Port
+	if (r_d>0.1) {
 		comPort.write(buffer, MOTORDRIVER_COMBUFFER_LENGTH);
 		comPort.flush();
 	}
