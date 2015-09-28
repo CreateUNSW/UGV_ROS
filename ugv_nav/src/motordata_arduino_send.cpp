@@ -61,6 +61,9 @@ void Motornav_Com::movement_callback(const ugv_nav::Movement::ConstPtr& msg) {
       // Get the data
       theta_d = msg->heading;
       r_d = msg->magnitude;
+	r_d = fmin(r_d,1);
+	r_d *= r_d;
+	
       
       ROS_INFO_STREAM("theta " << theta_d << " mag " << r_d);
       
@@ -94,7 +97,7 @@ void Motornav_Com::movement_callback(const ugv_nav::Movement::ConstPtr& msg) {
       printf("%.*s\n", MOTORDRIVER_COMBUFFER_LENGTH, buffer);
 
       // Write these bytes to the Com Port
-	if(r_d>0.15){
+	if(r_d>0.1){
 		comPort.write(buffer, MOTORDRIVER_COMBUFFER_LENGTH);
 		comPort.flush();
 	}
