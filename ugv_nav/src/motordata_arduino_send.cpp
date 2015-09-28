@@ -24,22 +24,8 @@ using namespace std;
 
 class Motornav_Com {
 public:
-    Motornav_Com(ros::NodeHandle n, char** argv) : n{n} {
-
-        movement_sub = n.subscribe("ugv_nav/movement", 1, &Motornav_Com::movement_callback, this);
-
-        char setupString[200];
-        strcpy(setupString, "stty -F ");
-        strcat(setupString, argv[1]);
-        strcat(setupString, " cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts");
-        system(setupString); //Activates the tty connection with the Arduino
-        comPort.open(argv[1]);
-        long int t = time(NULL);
-        while (time(NULL)-t < 5) {};
-
-        //	comPort.write("[hales]", 7);
-        comPort.flush();
-    }
+    Motornav_Com(ros::NodeHandle n, char** argv);
+    void sendMovement();
 private:
     ros::NodeHandle n;
     ros::Subscriber movement_sub;
@@ -48,8 +34,8 @@ private:
 
     float theta;
     float r; 
-    double theta_d;
-    double r_d; 
+    double theta_d = 0;
+    double r_d = 0; 
 
     int leftMotorVal, rightMotorVal;
     char leftMotorSign, rightMotorSign;
@@ -57,18 +43,36 @@ private:
     void movement_callback(const ugv_nav::Movement::ConstPtr& msg);
 };
 
+Motornav_Com::Motornav_Com(ros::NodeHandle n, char** argv) : n{n} {
+
+   movement_sub = n.subscribe("ugv_nav/movement", 1, &Motornav_Com::movement_callback, this);
+
+   char setupString[200];
+   strcpy(setupString, "stty -F ");
+   strcat(setupString, argv[1]);
+   strcat(setupString, " cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts");
+   system(setupString); //Activates the tty connection with the Arduino
+   comPort.open(argv[1]);
+   long int t = time(NULL);
+   while (time(NULL)-t < 5) {};
+
+   //	comPort.write("[hales]", 7);
+   comPort.flush();
+}
+
 void Motornav_Com::movement_callback(const ugv_nav::Movement::ConstPtr& msg) {
-      // Get the data
-      theta_d = msg->heading;
-      r_d = msg->magnitude;
+   // Get the data
+   theta_d = msg->heading;
+   r_d = msg->magnitude;
 	r_d = fmin(r_d,1);
 	r_d *= r_d;
-	
-      
-      ROS_INFO_STREAM("theta " << theta_d << " mag " << r_d);
-      
+
+   
+   ROS_INFO_STREAM("theta " << theta_d << " mag " << r_d);
+}
+
+void Motornav_Com::sendMovement() {
 	// new driving maths coming from old UGV_sketch
-	
 	if(theta_d<=M_PI/4&&theta_d>=-3*M_PI/4){
 		rightMotorSign = '+';
 	} else {
@@ -89,15 +93,15 @@ void Motornav_Com::movement_callback(const ugv_nav::Movement::ConstPtr& msg) {
 	leftMotorVal = fmin(leftMotorVal*r_d,255);
 	rightMotorVal = fmin(rightMotorVal*r_d,255);
 
-      char buffer[MOTORDRIVER_COMBUFFER_LENGTH+1];
-      char message[MOTORDRIVER_COMBUFFER_MSGLENGTH+1];
-      snprintf(message, MOTORDRIVER_COMBUFFER_MSGLENGTH+1, "%c%2.2X%c%2.2X", leftMotorSign, leftMotorVal, rightMotorSign, rightMotorVal);
-      unsigned char checksum = calculateChecksum(message, MOTORDRIVER_COMBUFFER_MSGLENGTH);
-      snprintf(buffer,MOTORDRIVER_COMBUFFER_LENGTH+1,"[%s:%2.2X]",message,checksum);
-      printf("%.*s\n", MOTORDRIVER_COMBUFFER_LENGTH, buffer);
+   char buffer[MOTORDRIVER_COMBUFFER_LENGTH+1];
+   char message[MOTORDRIVER_COMBUFFER_MSGLENGTH+1];
+   snprintf(message, MOTORDRIVER_COMBUFFER_MSGLENGTH+1, "%c%2.2X%c%2.2X", leftMotorSign, leftMotorVal, rightMotorSign, rightMotorVal);
+   unsigned char checksum = calculateChecksum(message, MOTORDRIVER_COMBUFFER_MSGLENGTH);
+   snprintf(buffer,MOTORDRIVER_COMBUFFER_LENGTH+1,"[%s:%2.2X]",message,checksum);
+   printf("%.*s\n", MOTORDRIVER_COMBUFFER_LENGTH, buffer);
 
       // Write these bytes to the Com Port
-	if(r_d>0.1){
+	if(r_d>0.1) {
 		comPort.write(buffer, MOTORDRIVER_COMBUFFER_LENGTH);
 		comPort.flush();
 	}
@@ -111,12 +115,15 @@ int main(int argc, char** argv){
    // Set up the rate of 100 Hz
    ros::Rate rate(10); // I haven't tested this past 10 Hz, 30 Hz causes it to fail
 
-    if (argc <= 1) {
-        ROS_INFO("Usage: please give the comport to communicate on as the first argument (i.e. /dev/ttyACM0)");
-        return 1;
-    }
+   if (argc <= 1) {
+      ROS_INFO("Usage: please give the comport to communicate on as the first argument (i.e. /dev/ttyACM0)");
+      return 1;
+   }
   
    Motornav_Com mnc(n, argv);
-   ros::spin();
+   while (ros::ok()) {
+      mnc.sendMovement();
+      ros::spin();
+   }
    return 0;
 }
