@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <bitset>
+#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <ros/ros.h>
@@ -24,11 +25,11 @@ private:
    ros::NodeHandle n;
    ros::Subscriber phone_gps_sub;
 
-   float source_latitude;
-   float source_longitude;
-   float destination_latitude = -33.916284;
-   float destination_longitude = 151.229490;
-
+   double source_latitude;
+   double source_longitude;
+   // Village green
+   double destination_latitude = -33.918172;
+   double destination_longitude = 151.227975;
    void gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg);
 };
 
@@ -40,7 +41,16 @@ void GPS_Drive::gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
   source_latitude = msg->latitude; 
   source_longitude = msg->longitude;
 
-  ROS_INFO_STREAM("Current GPS fix,  lat: " << source_latitude << " long: " << source_longitude);
+  printf("Current GPS fix,  lat: %lf, long: %lf\n", source_latitude, source_longitude);
+
+   double difference_lat = destination_latitude - source_latitude;
+   double difference_long =  destination_longitude - source_longitude;
+   
+   double difference_angle = atan2(difference_long, difference_lat);
+   double difference_angle_deg = difference_angle*180.0/M_PI;
+   double distance = sqrt(difference_lat*difference_lat+difference_long*difference_long)*111000.0;
+   printf("Global angle to our destination %lf", difference_angle_deg);
+   printf("Distance to our destination %lf", distance);
 }
 
 int main(int argc, char** argv) {
