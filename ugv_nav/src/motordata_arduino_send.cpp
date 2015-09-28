@@ -66,12 +66,11 @@ void Motornav_Com::movement_callback(const ugv_nav::Movement::ConstPtr& msg) {
    r_d = msg->magnitude;
 	r_d = fmin(r_d,1);
 	r_d *= r_d;
-
-   
-   ROS_INFO_STREAM("theta " << theta_d << " mag " << r_d);
 }
 
 void Motornav_Com::sendMovement() {
+   ROS_INFO_STREAM("theta " << theta_d << " mag " << r_d);
+
 	// new driving maths coming from old UGV_sketch
 	if(theta_d<=M_PI/4&&theta_d>=-3*M_PI/4){
 		rightMotorSign = '+';
