@@ -25,15 +25,16 @@ public:
 private:
    ros::NodeHandle n;
    ros::Subscriber phone_gps_sub;
-    ros::Subscriber phone_mag_sub;
+   ros::Subscriber phone_mag_sub;
+   ros::Publisher movement_pub;
 
    double source_latitude;
    double source_longitude;
    double distance_to_go;
 
-    double current_heading;
-    double desired_heading = 0;
-    double diff_heading;
+   double current_heading;
+   double desired_heading = 0; // Global heading
+   double diff_heading; // Local heading
    // Village green
    double destination_latitude = -33.918172;
    double destination_longitude = 151.227975;
@@ -45,6 +46,7 @@ private:
 GPS_Drive::GPS_Drive(ros::NodeHandle n) : n{n} {
    phone_gps_sub = n.subscribe("/phone1/android/fix", 1, &GPS_Drive::gps_callback, this);
     phone_mag_sub = n.subscribe("/phone1/android/magnetic_field", 1, &GPS_Drive::mag_callback, this);
+    movement_pub = n.advertise<ugv_nav::Movement>("/ugv_nav/movement", 1);
 }
 
 void GPS_Drive::gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
@@ -77,6 +79,11 @@ void GPS_Drive::mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg){
     }
     printf("Our current heading %lf degrees\n", current_heading);
     printf("We need to turn %lf degrees to reach our goal\n", diff_heading);
+
+    ugv_nav::Movement movement_msg;
+    movement_msg.heading = diff_heading/2;
+    movement_msg.magnitude = 0.7;
+    movement_pub.publish(movement_msg);
 }
 
 int main(int argc, char** argv) {
