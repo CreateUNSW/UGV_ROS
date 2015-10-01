@@ -60,8 +60,8 @@ void GPS_Drive::gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
    // note: clockwise is positive direction
    desired_heading = atan2(difference_long, difference_lat)*180.0/M_PI;
 
-   printf("Global angle to our destination %lf degrees\n", difference_angle_deg);
-   printf("Distance to our destination %lf\n", distance);
+   printf("Global angle to our destination %lf degrees\n", desired_heading);
+   printf("Distance to our destination %lf\n", distance_to_go);
 }
 
 void GPS_Drive::mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg){
@@ -76,7 +76,7 @@ void GPS_Drive::mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg){
     	diff_heading+=360;
     }
     printf("Our current heading %lf degrees\n", current_heading);
-    printf("We need to turn %lf degrees to reach our goal\n")
+    printf("We need to turn %lf degrees to reach our goal\n", diff_heading);
 }
 
 int main(int argc, char** argv) {
