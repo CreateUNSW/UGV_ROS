@@ -66,6 +66,9 @@ void Motornav_Com::movement_callback(const ugv_nav::Movement::ConstPtr& msg) {
    r_d = msg->magnitude;
 	r_d = fmin(r_d,1);
 	r_d *= r_d;
+
+   // Send movement to bot
+   sendMovement();
 }
 
 void Motornav_Com::sendMovement() {
@@ -121,9 +124,12 @@ int main(int argc, char** argv){
    }
   
    Motornav_Com mnc(n, argv);
+   /*
    while (ros::ok()) {
       mnc.sendMovement();
       ros::spinOnce();
    }
+   */
+   ros::spin();
    return 0;
 }
