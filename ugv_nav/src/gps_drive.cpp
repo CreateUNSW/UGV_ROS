@@ -79,13 +79,17 @@ void GPS_Drive::mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg){
    }
    printf("Our current heading %lf degrees\n", current_heading);
    printf("We need to turn %lf degrees to reach our goal\n", diff_heading);
-   
+
    double diff_heading_rad = diff_heading * M_PI / 180;
 
-   ugv_nav::Movement movement_msg;
-   movement_msg.heading = diff_heading_rad/2;
-   movement_msg.magnitude = 0.7;
-   movement_pub.publish(movement_msg);
+   // Publish a movement only if distance is greater than 5m
+   // If we are within 5m of our destination, stop driving
+   if (distance_to_go > 5) {
+      ugv_nav::Movement movement_msg;
+      movement_msg.heading = diff_heading_rad/2;
+      movement_msg.magnitude = 0.7;
+      movement_pub.publish(movement_msg);
+   }
 }
 
 int main(int argc, char** argv) {
