@@ -45,15 +45,15 @@ private:
 
 GPS_Drive::GPS_Drive(ros::NodeHandle n) : n{n} {
    phone_gps_sub = n.subscribe("/phone1/android/fix", 1, &GPS_Drive::gps_callback, this);
-    phone_mag_sub = n.subscribe("/phone1/android/magnetic_field", 1, &GPS_Drive::mag_callback, this);
-    movement_pub = n.advertise<ugv_nav::Movement>("/ugv_nav/movement", 1);
+   phone_mag_sub = n.subscribe("/phone1/android/magnetic_field", 1, &GPS_Drive::mag_callback, this);
+   movement_pub = n.advertise<ugv_nav::Movement>("/ugv_nav/movement", 1);
 }
 
 void GPS_Drive::gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
-  source_latitude = msg->latitude;
-  source_longitude = msg->longitude;
+   source_latitude = msg->latitude;
+   source_longitude = msg->longitude;
 
-  printf("Current GPS fix,  lat: %lf, long: %lf\n", source_latitude, source_longitude);
+   printf("Current GPS fix,  lat: %lf, long: %lf\n", source_latitude, source_longitude);
 
    double difference_lat = destination_latitude - source_latitude;
    double difference_long =  destination_longitude - source_longitude;
@@ -67,23 +67,25 @@ void GPS_Drive::gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
 }
 
 void GPS_Drive::mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg){
-    double x_mag = msg->magnetic_field.x;
-    double y_mag = msg->magnetic_field.y;
-    current_heading = -atan2(x_mag,y_mag)*180.0/M_PI; // negative because phone seems to invert compass, i think
-    diff_heading = desired_heading - current_heading;
-    // normalize to range of -180 to +180 with clockwise as positive
-    if(diff_heading>180){
-		diff_heading-=360;
-    } else if (diff_heading<=-180){
-    	diff_heading+=360;
-    }
-    printf("Our current heading %lf degrees\n", current_heading);
-    printf("We need to turn %lf degrees to reach our goal\n", diff_heading);
+   double x_mag = msg->magnetic_field.x;
+   double y_mag = msg->magnetic_field.y;
+   current_heading = -atan2(x_mag,y_mag)*180.0/M_PI; // negative because phone seems to invert compass, i think
+   diff_heading = desired_heading - current_heading;
+   // normalize to range of -180 to +180 with clockwise as positive
+   if(diff_heading>180){
+	   diff_heading-=360;
+   } else if (diff_heading<=-180){
+   	diff_heading+=360;
+   }
+   printf("Our current heading %lf degrees\n", current_heading);
+   printf("We need to turn %lf degrees to reach our goal\n", diff_heading);
+   
+   double diff_heading_rad = diff_heading * M_PI / 180;
 
-    ugv_nav::Movement movement_msg;
-    movement_msg.heading = diff_heading/2;
-    movement_msg.magnitude = 0.7;
-    movement_pub.publish(movement_msg);
+   ugv_nav::Movement movement_msg;
+   movement_msg.heading = diff_heading_rad/2;
+   movement_msg.magnitude = 0.7;
+   movement_pub.publish(movement_msg);
 }
 
 int main(int argc, char** argv) {
