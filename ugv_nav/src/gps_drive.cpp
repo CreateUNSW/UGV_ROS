@@ -14,6 +14,8 @@
 
 using namespace std;
 
+#define PHONE_OFFSET_ANGLE 90   // Angle of phone in comparison to robot
+
 
 /* This program will read values from /heading and /magnitude,
  * convert them to motor driver input and send them to
@@ -40,8 +42,12 @@ private:
    // double destination_longitude = 151.227975;
 
    // Middle of College lawn
-   double destination_latitude = -33.916247;
-   double destination_longitude = 151.228818;
+    double destination_latitude = -33.916247;
+    double destination_longitude = 151.228818;
+
+   // Outside MCIC
+   // double destination_latitude = -33.916381;
+   // double destination_longitude = 151.228768;
 
    void gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg);
 	void mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg);
@@ -74,6 +80,7 @@ void GPS_Drive::mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg){
    double x_mag = msg->magnetic_field.x;
    double y_mag = msg->magnetic_field.y;
    current_heading = -atan2(x_mag,y_mag)*180.0/M_PI; // negative because phone seems to invert compass, i think
+   current_heading -= PHONE_OFFSET_ANGLE;
    diff_heading = desired_heading - current_heading;
    // normalize to range of -180 to +180 with clockwise as positive
    if(diff_heading>180){
