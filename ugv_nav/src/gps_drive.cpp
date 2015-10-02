@@ -36,8 +36,12 @@ private:
    double desired_heading = 0; // Global heading
    double diff_heading; // Local heading
    // Village green
-   double destination_latitude = -33.918172;
-   double destination_longitude = 151.227975;
+   // double destination_latitude = -33.918172;
+   // double destination_longitude = 151.227975;
+
+   // Middle of College lawn
+   double destination_latitude = -33.916247;
+   double destination_longitude = 151.228818;
 
    void gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg);
 	void mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg);
