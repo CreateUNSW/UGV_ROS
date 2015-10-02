@@ -8,6 +8,7 @@
 #include <cmath>
 #include "shared/shared.hpp"
 #include <message_filters/subscriber.h>
+#include <std_msgs/Bool.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/MagneticField.h>
 #include "ugv_nav/Movement.h"
@@ -21,12 +22,14 @@ using namespace std;
 
 class GPS_Drive {
 public:
-   GPS_Drive(ros::NodeHandle, double, double);
+   GPS_Drive(ros::NodeHandle);
 private:
    ros::NodeHandle n;
    ros::Subscriber phone_gps_sub;
    ros::Subscriber phone_mag_sub;
+   ros::Subscriber waypoint_sub;
    ros::Publisher movement_pub;
+   ros::Publisher arrived_pub;
 
    double source_latitude;
    double source_longitude;
@@ -48,13 +51,15 @@ private:
 
    void gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg);
 	void mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg);
+   void waypoint_callback(const sensor_msgs::NavSatFix::ConstPtr& msg);
 };
 
-GPS_Drive::GPS_Drive(ros::NodeHandle n, double dest_lat, double dest_long) :
-   n{n}, destination_latitude{dest_lat}, destination_longitude{dest_long} {
+GPS_Drive::GPS_Drive(ros::NodeHandle n) : n{n} {
    phone_gps_sub = n.subscribe("/phone1/android/fix", 1, &GPS_Drive::gps_callback, this);
    phone_mag_sub = n.subscribe("/phone1/android/magnetic_field", 1, &GPS_Drive::mag_callback, this);
+   waypoint_sub = n.subscribe("/ugv_nav/waypoints", 1, &GPS_Drive::waypoint_callback, this);
    movement_pub = n.advertise<ugv_nav::Movement>("/ugv_nav/movement", 1);
+   arrived_pub = n.advertise<std_msgs::Bool>("/ugv_nav/arrived", 1);
 }
 
 void GPS_Drive::gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
@@ -97,7 +102,18 @@ void GPS_Drive::mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg){
       movement_msg.heading = diff_heading_rad/2;
       movement_msg.magnitude = 0.7;
       movement_pub.publish(movement_msg);
+   } else {
+      // Publish message to signal that we have arrived at this waypoint
+      std_msgs::Bool arrived_at_dest;
+      arrived_at_dest.data = true;
+      arrived_pub.publish(arrived_at_dest);
    }
+}
+
+void GPS_Drive::waypoint_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
+   // Update destination
+   destination_latitude = msg->latitude;
+   destination_longitude = msg->longitude;
 }
 
 int main(int argc, char** argv) {
@@ -105,13 +121,10 @@ int main(int argc, char** argv) {
    ros::init(argc, argv, "gps_drive");
    ros::NodeHandle n;
 
-   double dest_lat = atof(argv[1]);
-   double dest_long = atof(argv[2]);
-
    // Set up the rate of 100 Hz
    ros::Rate rate(10); // I haven't tested this past 10 Hz, 30 Hz causes it to fail
 
-   GPS_Drive driver(n, dest_lat, dest_long);
+   GPS_Drive driver(n);
    ros::spin();
 
    return 0;
