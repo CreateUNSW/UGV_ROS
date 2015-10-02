@@ -23,7 +23,7 @@ using namespace std;
 
 class GPS_Drive {
 public:
-   GPS_Drive(ros::NodeHandle);
+   GPS_Drive(ros::NodeHandle, double, double);
 private:
    ros::NodeHandle n;
    ros::Subscriber phone_gps_sub;
@@ -42,18 +42,24 @@ private:
    // double destination_longitude = 151.227975;
 
    // Middle of College lawn
-    double destination_latitude = -33.916247;
-    double destination_longitude = 151.228818;
+   //  double destination_latitude = -33.916247;
+   // double destination_longitude = 151.228818;
 
    // Outside MCIC
    // double destination_latitude = -33.916381;
    // double destination_longitude = 151.228768;
+   // double destination_latitude = -33.916247;
+   // double destination_longitude = 151.228818;
+
+   double destination_latitude;
+   double destination_longitude;
 
    void gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg);
 	void mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg);
 };
 
-GPS_Drive::GPS_Drive(ros::NodeHandle n) : n{n} {
+GPS_Drive::GPS_Drive(ros::NodeHandle n, double dest_lat, double dest_long) :
+   n{n}, destination_latitude{dest_lat}, destination_longitude{dest_long} {
    phone_gps_sub = n.subscribe("/phone1/android/fix", 1, &GPS_Drive::gps_callback, this);
    phone_mag_sub = n.subscribe("/phone1/android/magnetic_field", 1, &GPS_Drive::mag_callback, this);
    movement_pub = n.advertise<ugv_nav::Movement>("/ugv_nav/movement", 1);
@@ -108,10 +114,13 @@ int main(int argc, char** argv) {
    ros::init(argc, argv, "gps_drive");
    ros::NodeHandle n;
 
+   double dest_lat = atof(argv[1]);
+   double dest_long = atof(argv[2]);
+
    // Set up the rate of 100 Hz
    ros::Rate rate(10); // I haven't tested this past 10 Hz, 30 Hz causes it to fail
 
-   GPS_Drive driver(n);
+   GPS_Drive driver(n, dest_lat, dest_long);
    ros::spin();
 
    return 0;
