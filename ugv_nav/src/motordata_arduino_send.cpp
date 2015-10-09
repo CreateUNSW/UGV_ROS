@@ -124,12 +124,12 @@ int main(int argc, char** argv){
    }
   
    Motornav_Com mnc(n, argv);
-   /*
+  
    while (ros::ok()) {
       mnc.sendMovement();
       ros::spinOnce();
    }
-   */
-   ros::spin();
+   
+   //ros::spin();
    return 0;
 }
