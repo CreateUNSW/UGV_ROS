@@ -75,7 +75,7 @@ void GPS_Drive::gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
    source_longitude = msg->longitude;
 
    printf("Current GPS fix,  lat: %lf, long: %lf\n", source_latitude, source_longitude);
-   printf("We want to go: lat: %lf, long: %lf\n", destination_latitude, destination_longitude);
+   printf("We want to go to destination,  lat: %lf, long: %lf\n", destination_latitude, destination_longitude);
 
    double difference_lat = destination_latitude - source_latitude;
    double difference_long =  destination_longitude - source_longitude;
