@@ -110,6 +110,7 @@ add_executable(motordata_send src/motordata_send.cpp)
 add_executable(motordata_arduino_send src/motordata_arduino_send.cpp)
 add_executable(gps_drive src/gps_drive.cpp)
 add_executable(cfg_parser src/cfg_parser.cpp)
+add_executable(laser src/testLaser.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -117,6 +118,7 @@ add_dependencies(controller_get ugv_nav_generate_messages_cpp)
 add_dependencies(motordata_arduino_send ugv_nav_generate_messages_cpp)
 add_dependencies(gps_drive ugv_nav_generate_messages_cpp)
 add_dependencies(cfg_parser nav_generate_messages_cpp)
+add_dependencies(laser ugv_nav_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(data_send ${catkin_LIBRARIES})
@@ -125,6 +127,7 @@ add_dependencies(cfg_parser nav_generate_messages_cpp)
  target_link_libraries(motordata_arduino_send ${catkin_LIBRARIES} sharedLib)
  target_link_libraries(gps_drive ${catkin_LIBRARIES} sharedLib)
  target_link_libraries(cfg_parser ${catkin_LIBRARIES} sharedLib)
+ target_link_libraries(laser ${catkin_LIBRARIES} sharedLib)
 #############
 ## Install ##
 #############

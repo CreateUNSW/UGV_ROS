@@ -9,7 +9,7 @@
 #include <string>
 #include "shared/shared.hpp"
 #include <std_msgs/Bool.h>
-#include <sensor_msgs/NavSatFix.h>
+#include <sensor_msgs/LaserScan.h>
 #include <message_filters/subscriber.h>
 #include <vector>
 #include <algorithm>
@@ -22,6 +22,7 @@ public:
 private:
    ros::NodeHandle n;
    ros::Subscriber laser_sub;
+   void laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg);
 };
 
 Laser::Laser(ros::NodeHandle n) : n{n} {
@@ -31,8 +32,8 @@ Laser::Laser(ros::NodeHandle n) : n{n} {
    ros::spinOnce();
 }
 
-Laser::laser_callback(const std_msgs::Scan::ConstPtr& msg) {
-
+void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
+   cout << "size of ranges array " << msg->ranges.size() << endl;
 }
 
 int main (int argc, char *argv[]) {
