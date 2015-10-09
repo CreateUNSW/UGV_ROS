@@ -92,6 +92,9 @@ void GPS_Drive::mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg){
    double y_mag = msg->magnetic_field.y;
    current_heading = -atan2(x_mag,y_mag)*180.0/M_PI; // negative because phone seems to invert compass, i think
    current_heading -= PHONE_OFFSET_ANGLE;
+    if(current_heading<=-180){
+	current_heading+=360;
+   }	
    diff_heading = desired_heading - current_heading;
    // normalize to range of -180 to +180 with clockwise as positive
    if(diff_heading>180){
