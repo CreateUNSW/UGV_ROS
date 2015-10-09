@@ -30,7 +30,7 @@ Laser::Laser(ros::NodeHandle n) : n{n} {
    laser_sub = n.subscribe("/scan", 1, &Laser::laser_callback, this);
 
    ros::Rate rate(10); 
-   ros::spinOnce();
+   ros::spin();
 }
 
 void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
@@ -43,7 +43,7 @@ void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
 bool Laser::tooClose(vector<float> ranges) const {
    for (int i = 60; i <= 210; ++i) {
-      if (ranges[i] != 0.0 && ranges[i] < 2.0) {
+      if (ranges[i] != 0.0 && ranges[i] < 1.0) {
          return true;
       }
    }
