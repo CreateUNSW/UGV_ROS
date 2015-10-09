@@ -10,6 +10,7 @@
 #include "shared/shared.hpp"
 #include <std_msgs/Bool.h>
 #include <sensor_msgs/LaserScan.h>
+#include <std_msgs/Bool.h>
 #include <message_filters/subscriber.h>
 #include <vector>
 #include <algorithm>
@@ -21,6 +22,7 @@ public:
    Laser(ros::NodeHandle);
 private:
    ros::NodeHandle n;
+   ros::Publisher safe_pub;
    ros::Subscriber laser_sub;
    void laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg);
    bool tooClose(vector<float> ranges) const;
@@ -28,14 +30,18 @@ private:
 
 Laser::Laser(ros::NodeHandle n) : n{n} {
    laser_sub = n.subscribe("/scan", 1, &Laser::laser_callback, this);
+   safe_pub = n.advertise<std_msgs::Bool>("/ugv_nav/safe", 1);
 
    ros::Rate rate(10); 
    ros::spinOnce();
 }
 
 void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
+  
+   // TODO: publish a safe message!
    if (tooClose(msg->ranges)) {
       cout << "we're too close!" << endl;
+
    } else {
       cout << "clear" << endl;
    }
