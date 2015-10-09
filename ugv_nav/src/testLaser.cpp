@@ -23,6 +23,7 @@ private:
    ros::NodeHandle n;
    ros::Subscriber laser_sub;
    void laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg);
+   bool tooClose(vector<float> ranges) const;
 };
 
 Laser::Laser(ros::NodeHandle n) : n{n} {
@@ -33,7 +34,20 @@ Laser::Laser(ros::NodeHandle n) : n{n} {
 }
 
 void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
-   cout << "size of ranges array " << msg->ranges.size() << endl;
+   if (tooClose(msg->ranges)) {
+      cout << "we're too close!" << endl;
+   } else {
+      cout << "clear" << endl;
+   }
+}
+
+bool Laser::tooClose(vector<float> ranges) const {
+   for (int i = 60; i <= 210; ++i) {
+      if (ranges[i] != 0.0 && ranges[i] < 2.0) {
+         return true;
+      }
+   }
+   return false;
 }
 
 int main (int argc, char *argv[]) {
