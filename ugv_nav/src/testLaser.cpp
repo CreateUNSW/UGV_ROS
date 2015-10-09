@@ -33,7 +33,7 @@ Laser::Laser(ros::NodeHandle n) : n{n} {
    safe_pub = n.advertise<std_msgs::Bool>("/ugv_nav/safe", 1);
 
    ros::Rate rate(10); 
-   ros::spinOnce();
+   ros::spin();
 }
 
 void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
@@ -48,8 +48,11 @@ void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 }
 
 bool Laser::tooClose(vector<float> ranges) const {
-   for (int i = 60; i <= 210; ++i) {
-      if (ranges[i] != 0.0 && ranges[i] < 2.0) {
+   int min_range = 60;
+   int max_range = 210;
+   float safe_distance = 1.0;
+   for (int i = min_range; i <= max_range; ++i) {
+      if (ranges[i] != 0.0 && ranges[i] < safe_distance) {
          return true;
       }
    }
