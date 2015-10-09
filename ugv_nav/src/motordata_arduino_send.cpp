@@ -33,9 +33,9 @@ private:
     ofstream comPort;
 
     float theta;
-    float r; 
+    float r;
     double theta_d = 0;
-    double r_d = 0; 
+    double r_d = 0;
 
     int leftMotorVal, rightMotorVal;
     char leftMotorSign, rightMotorSign;
@@ -72,7 +72,7 @@ void Motornav_Com::movement_callback(const ugv_nav::Movement::ConstPtr& msg) {
 }
 
 void Motornav_Com::sendMovement() {
-   
+
 	if(r_d>0.1) {
 		// new driving maths coming from old UGV_sketch
 		if(theta_d<=M_PI/4&&theta_d>=-3*M_PI/4){
@@ -103,7 +103,7 @@ void Motornav_Com::sendMovement() {
 		printf("%.*s\n", MOTORDRIVER_COMBUFFER_LENGTH, buffer);
 
       // Write these bytes to the Com Port
-	
+
 		ROS_INFO_STREAM("theta " << theta_d << " mag " << r_d);
 		comPort.write(buffer, MOTORDRIVER_COMBUFFER_LENGTH);
 		comPort.flush();
@@ -122,14 +122,14 @@ int main(int argc, char** argv){
       ROS_INFO("Usage: please give the comport to communicate on as the first argument (i.e. /dev/ttyACM0)");
       return 1;
    }
-  
+
    Motornav_Com mnc(n, argv);
-  
+   /*
    while (ros::ok()) {
       mnc.sendMovement();
       ros::spinOnce();
    }
-   
-   //ros::spin();
+   */
+   ros::spin();
    return 0;
 }
