@@ -124,6 +124,7 @@ int main(int argc, char** argv){
    }
 
    Motornav_Com mnc(n, argv);
+   ROS_INFO("motornav_com setup successfully");
    /*
    while (ros::ok()) {
       mnc.sendMovement();

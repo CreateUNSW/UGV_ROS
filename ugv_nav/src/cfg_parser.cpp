@@ -98,6 +98,7 @@ int main (int argc, char *argv[]) {
    ros::NodeHandle n;
 
    Cfg_Parser parser(n);
+   ROS_INFO("cfg_parser setup successfully");
 
    return 0;
 }

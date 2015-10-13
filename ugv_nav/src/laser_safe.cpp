@@ -115,9 +115,10 @@ int Laser::getClosestSafePoint(vector<float> ranges) const {
 
 int main (int argc, char *argv[]) {
    // Initialising the ros node
-   ros::init(argc, argv, "laser");
+   ros::init(argc, argv, "laser_safe");
    ros::NodeHandle n;
 
    Laser laser(n);
+   ROS_INFO("laser_safe setup successfully");
    return 0;
 }

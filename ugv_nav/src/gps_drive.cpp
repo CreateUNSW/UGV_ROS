@@ -158,6 +158,7 @@ int main(int argc, char** argv) {
    ros::Rate rate(10); // I haven't tested this past 10 Hz, 30 Hz causes it to fail
 
    GPS_Drive driver(n);
+   ROS_INFO("gps_drive setup successfully");
    ros::spin();
 
    return 0;
