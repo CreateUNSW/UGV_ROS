@@ -110,7 +110,7 @@ add_executable(motordata_send src/motordata_send.cpp)
 add_executable(motordata_arduino_send src/motordata_arduino_send.cpp)
 add_executable(gps_drive src/gps_drive.cpp)
 add_executable(cfg_parser src/cfg_parser.cpp)
-add_executable(laser src/testLaser.cpp)
+add_executable(laser src/laser_safe.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
