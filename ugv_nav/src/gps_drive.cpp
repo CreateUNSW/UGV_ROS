@@ -125,7 +125,9 @@ void GPS_Drive::mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg){
       movement_msg.heading = diff_heading_rad/2;
       movement_msg.magnitude = 0.7;
       if (safe) {
+         // This module will
          // Publish movement message only if it is safe to move
+         // If it is not safe, the laser_safe module will publish a movement message
          movement_pub.publish(movement_msg);
       }
    } else {
