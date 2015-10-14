@@ -18,10 +18,12 @@
 
 #include "ugv_nav/Movement.h"
 
-#define MIN_RANGE 60
-#define MAX_RANGE 210
+// #define MIN_RANGE 60
+#define MIN_RANGE 90 
+//#define MAX_RANGE 210
+#define MAX_RANGE 180
 #define SAFE_DISTANCE 1.5
-#define SAFETY_OFFSET 10 
+#define SAFETY_OFFSET_DISTANCE 0.5 
 
 using namespace std;
 
@@ -90,13 +92,17 @@ bool Laser::tooClose(vector<float> ranges) const {
 
 int Laser::getClosestSafePoint(vector<float> ranges) const {
    int safeIndex = 0;
+   double safetyOffset_rad, safetyOffset_deg;
 
    // If our obstacle is getting cut out of our laser's range on the left hand side
    // take the closest safe point on its right and drive there.
    if (ranges[MIN_RANGE] != 0.0 && ranges[MIN_RANGE] < SAFE_DISTANCE) {
       for (int i = MIN_RANGE; i <= MAX_RANGE; ++i) {
          if (ranges[i] == 0.0 || ranges[i] > SAFE_DISTANCE) {
-            safeIndex = i + SAFETY_OFFSET;
+            //safeIndex = i + SAFETY_OFFSET;
+            safetyOffset_rad = atan(SAFETY_OFFSET_DISTANCE/ranges[i]);
+            safetyOffset_deg = safetyOffset_rad * 180/M_PI;
+            safeIndex = i + safetyOffset_deg;
             break;
          }
       }
@@ -104,7 +110,10 @@ int Laser::getClosestSafePoint(vector<float> ranges) const {
       // We take the closest safe point on its left and drive there
       for (int i = MIN_RANGE; i <= MAX_RANGE; ++i) {
          if (ranges[i] != 0.0 && ranges[i] < SAFE_DISTANCE) {
-            safeIndex = i - SAFETY_OFFSET;
+            //safeIndex = i - SAFETY_OFFSET;
+            safetyOffset_rad = atan(SAFETY_OFFSET_DISTANCE/ranges[i]);
+            safetyOffset_deg = safetyOffset_rad * 180/M_PI;
+            safeIndex = i - safetyOffset_deg;
             break;
          }
       }
