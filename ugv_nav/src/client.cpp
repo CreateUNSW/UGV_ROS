@@ -1,11 +1,14 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
 #include <unistd.h>
-#include <string.h>
+#include <cstring>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h> 
+
+using namespace std;
 
 void error(const char *msg)
 {
@@ -53,7 +56,7 @@ int main(int argc, char *argv[])
     if (n < 0) {
          //error("ERROR reading from socket");
     } else {
-	printf("%s\n",buffer);
+	cout << buffer;
     //close(sockfd);
     }
     }    

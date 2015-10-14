@@ -29,6 +29,7 @@ int main(int argc, char** argv){
    while(ros::ok()){
       std::getline (std::cin,line);
       stringstream ssin(line);
+cout << ssin.str() << endl;
       i = 0;
       while (ssin.good() && i < 3){
         ssin >> gps_words[i];
