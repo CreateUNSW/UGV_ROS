@@ -24,12 +24,12 @@ int main(int argc, char** argv){
     sensor_msgs::NavSatFix rtk_gps_msg;
     ros::Publisher rtk_gps_pub = n.advertise<sensor_msgs::NavSatFix>("/ugv_nav/rtk_fix", 1);
 
-
-
+   string gps_words[3];
+   int i;
    while(ros::ok()){
-      string gps_words[3];
       std::getline (std::cin,line);
       stringstream ssin(line);
+      i = 0;
       while (ssin.good() && i < 3){
         ssin >> gps_words[i];
         ++i;
