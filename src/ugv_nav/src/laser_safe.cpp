@@ -25,6 +25,8 @@
 #define SAFE_DISTANCE 0.7
 #define DETECT_RANGE 3
 
+typedef enum {TOO_CLOSE,IN_RANGE,CLEAR} obstacle_type;
+
 using namespace std;
 
 class Laser {
@@ -40,7 +42,7 @@ private:
    void laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg);
    void heading_callback(const std_msgs::Float32::ConstPtr& msg);
    void arrived_callback(const std_msgs::Bool::ConstPtr& msg);
-   bool tooClose(vector<float> ranges) const;
+   obstacle_type inRange(vector<float> ranges) const;
    int getClosestSafePoint(vector<float> ranges) const;
    int getBestHeading(vector<float> ranges, int desired_heading) const;
    int desired_heading; //degrees
@@ -59,31 +61,43 @@ Laser::Laser(ros::NodeHandle n) : n{n} {
 
 void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
    std_msgs::Bool safe;
-   if (!tooClose(msg->ranges)&&continue_driving) {
-      int desired_heading_transform = desired_heading + MIDDLE_RANGE;
-      int safeIndex = getBestHeading(msg->ranges,desired_heading_transform);
-      if(safeIndex>=0){
-          // Calculate bearing to this safe index
-          // Heading in local coordinates
-          double heading_deg = safeIndex - MIDDLE_RANGE;
-          // -180 < heading_deg <= 180
-          if (heading_deg > 180){
-             heading_deg -= 360;
-          } else if (heading_deg <= -180){
-             heading_deg += 360;
+   obstacle_type currentView = inRange();
+   if (currentView!=TOO_CLOSE&&continue_driving) {
+        ugv_nav::Movement movement_msg;
+        double heading_deg;
+      if(currentView==IN_RANGE){
+          int desired_heading_transform = desired_heading + MIDDLE_RANGE;
+          int safeIndex = getBestHeading(msg->ranges,desired_heading_transform);
+          if(safeIndex>=0){
+              // Calculate bearing to this safe index
+              // Heading in local coordinates
+              heading_deg = safeIndex - MIDDLE_RANGE;
+              // -180 < heading_deg <= 180
+          } else {
+              // no way around
+              return;
           }
-
-          // Turn to radians
-          double heading_rad = heading_deg*M_PI/180;
-
-          // Publish a movement message to swerve around the obstacle
-          ugv_nav::Movement movement_msg;
-          // TODO: does this need to be halved?
-          movement_msg.heading = heading_rad/2;
-          movement_msg.magnitude = 0.7;
-          movement_pub.publish(movement_msg);
+      } else {
+          heading_deg = desired_heading;
       }
+
+      if (heading_deg > 180){
+         heading_deg -= 360;
+      } else if (heading_deg <= -180){
+         heading_deg += 360;
+      }
+
+      // Turn to radians
+      double heading_rad = heading_deg*M_PI/180;
+
+      // Publish a movement message to swerve around the obstacle
+
+      // TODO: does this need to be halved?
+      movement_msg.heading = heading_rad/2;
+      movement_msg.magnitude = 0.7;
+      movement_pub.publish(movement_msg);
    }
+
 }
 
 void Laser::heading_callback(const std_msgs::Float32::ConstPtr & msg){
@@ -95,13 +109,18 @@ void Laser::arrived_callback(const std_msgs::Bool::ConstPtr& msg){
     continue_driving = false;
 }
 
-bool Laser::tooClose(vector<float> ranges) const {
+obstacle_type Laser::inRange(vector<float> ranges) const {
+    obstacle_type ret = CLEAR;
    for (int i = MIN_RANGE; i <= MAX_RANGE; ++i) {
-      if (ranges[i] != 0.0 && ranges[i] < SAFE_DISTANCE) {
-         return true;
+      if (ranges[i] != 0.0) {
+         if( ranges[i] < SAFE_DISTANCE) {
+            return TOO_CLOSE;
+         } else if (ranges[i]<DETECT_RANGE) {
+             ret = IN_RANGE;
+         }
       }
    }
-   return false;
+   return ret;
 }
 
 int Laser::getBestHeading(vector<float> ranges, int desired_heading_transform) const {
@@ -110,7 +129,7 @@ int Laser::getBestHeading(vector<float> ranges, int desired_heading_transform) c
     double angle_buffer_rad;
     int angle_buffer_deg = 0;
     // populate obstacles array by padding each obstacle reading on both sides
-    // first, sweep one way (right to left?)
+    // first, sweep one way, right to left
     for (int i = MIN_RANGE; i <= MAX_RANGE; ++i) {
         if (ranges[i] != 0.0 && ranges[i] < DETECT_RANGE) {
             angle_buffer_rad = atan(SAFE_DISTANCE/ranges[i]);
