@@ -61,7 +61,7 @@ Laser::Laser(ros::NodeHandle n) : n{n} {
 
 void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
    std_msgs::Bool safe;
-   obstacle_type currentView = inRange();
+   obstacle_type currentView = inRange(msg->ranges);
    if (currentView!=TOO_CLOSE&&continue_driving) {
         ugv_nav::Movement movement_msg;
         double heading_deg;
