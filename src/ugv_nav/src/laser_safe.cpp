@@ -113,7 +113,7 @@ int Laser::getBestHeading(vector<float> ranges, int desired_heading_transform) c
     // first, sweep one way (right to left?)
     for (int i = MIN_RANGE; i <= MAX_RANGE; ++i) {
         if (ranges[i] != 0.0 && ranges[i] < DETECT_RANGE) {
-            angle_buffer_rad = asin(SAFE_DISTANCE/ranges[i]);
+            angle_buffer_rad = atan(SAFE_DISTANCE/ranges[i]);
             angle_buffer_deg = fmax(angle_buffer_deg,floor(angle_buffer_rad * 180/M_PI));
         }
         if(angle_buffer_deg>0){
@@ -126,7 +126,7 @@ int Laser::getBestHeading(vector<float> ranges, int desired_heading_transform) c
     angle_buffer_deg = 0;
     for (int i = MAX_RANGE; i>=MIN_RANGE; --i) {
         if (ranges[i] != 0.0 && ranges[i] < DETECT_RANGE) {
-            angle_buffer_rad = asin(SAFE_DISTANCE/ranges[i]);
+            angle_buffer_rad = atan(SAFE_DISTANCE/ranges[i]);
             angle_buffer_deg = fmax(angle_buffer_deg,floor(angle_buffer_rad * 180/M_PI));
         }
         if(angle_buffer_deg>0){
