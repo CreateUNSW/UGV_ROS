@@ -8,7 +8,8 @@
 #include <cmath>
 #include <string>
 #include "shared/shared.hpp"
-#include <std_msgs>
+#include <std_msgs/Bool.h>
+#include <std_msgs/Float32.h>
 #include <sensor_msgs/LaserScan.h>
 #include <message_filters/subscriber.h>
 #include <vector>

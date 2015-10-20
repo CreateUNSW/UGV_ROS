@@ -51,7 +51,6 @@ private:
 };
 
 GPS_Drive::GPS_Drive(ros::NodeHandle n) : n{n} {
-   safe = false;
    phone_gps_sub = n.subscribe("/phone1/android/fix", 1, &GPS_Drive::gps_callback, this);
    phone_mag_sub = n.subscribe("/phone1/android/magnetic_field", 1, &GPS_Drive::mag_callback, this);
    waypoint_sub = n.subscribe("/ugv_nav/waypoints", 1, &GPS_Drive::waypoint_callback, this);
