@@ -9,9 +9,9 @@
 #include "shared/shared.hpp"
 #include <message_filters/subscriber.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Float32.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/MagneticField.h>
-#include "ugv_nav/Movement.h"
 
 using namespace std;
 
@@ -30,11 +30,8 @@ private:
    ros::Subscriber phone_gps_sub;
    ros::Subscriber phone_mag_sub;
    ros::Subscriber waypoint_sub;
-   ros::Subscriber safe_sub;
-   ros::Publisher movement_pub;
+   ros::Publisher desired_heading_pub;
    ros::Publisher arrived_pub;
-
-   bool safe;
 
    double source_latitude;
    double source_longitude;
@@ -43,19 +40,6 @@ private:
    double current_heading;
    double desired_heading = 0; // Global heading
    double diff_heading; // Local heading
-   // Village green
-   // double destination_latitude = -33.918172;
-   // double destination_longitude = 151.227975;
-
-   // Middle of College lawn
-   //  double destination_latitude = -33.916247;
-   // double destination_longitude = 151.228818;
-
-   // Outside MCIC
-   // double destination_latitude = -33.916381;
-   // double destination_longitude = 151.228768;
-   // double destination_latitude = -33.916247;
-   // double destination_longitude = 151.228818;
 
    double destination_latitude;
    double destination_longitude;
@@ -71,8 +55,7 @@ GPS_Drive::GPS_Drive(ros::NodeHandle n) : n{n} {
    phone_gps_sub = n.subscribe("/phone1/android/fix", 1, &GPS_Drive::gps_callback, this);
    phone_mag_sub = n.subscribe("/phone1/android/magnetic_field", 1, &GPS_Drive::mag_callback, this);
    waypoint_sub = n.subscribe("/ugv_nav/waypoints", 1, &GPS_Drive::waypoint_callback, this);
-   safe_sub = n.subscribe("/ugv_nav/safe", 1, &GPS_Drive::safe_callback, this);
-   movement_pub = n.advertise<ugv_nav::Movement>("/ugv_nav/movement", 1);
+   desired_heading_pub = n.advertise<std_msgs::Float32>("/ugv_nav/desired_heading", 1);
    arrived_pub = n.advertise<std_msgs::Bool>("/ugv_nav/arrived", 1);
 }
 
@@ -107,7 +90,7 @@ void GPS_Drive::mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg){
    current_heading -= PHONE_OFFSET_ANGLE;
     if(current_heading<=-180){
 	current_heading+=360;
-   }	
+   }
    diff_heading = desired_heading - current_heading;
    // normalize to range of -180 to +180 with clockwise as positive
    if(diff_heading>180){
@@ -116,20 +99,12 @@ void GPS_Drive::mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg){
    	diff_heading+=360;
    }
 
-   double diff_heading_rad = diff_heading * M_PI / 180;
-
    // Publish a movement only if distance is greater than 5m
    // If we are within 5m of our destination, stop driving
    if (distance_to_go > 5) {
-      ugv_nav::Movement movement_msg;
-      movement_msg.heading = diff_heading_rad/2;
-      movement_msg.magnitude = 0.7;
-      if (safe) {
-         // This module will
-         // Publish movement message only if it is safe to move
-         // If it is not safe, the laser_safe module will publish a movement message
-         movement_pub.publish(movement_msg);
-      }
+      std_msgs::Float32 new_heading;
+      new_heading.data = diff_heading;
+      desired_heading_pub.publish(new_heading);
    } else {
       // Publish message to signal that we have arrived at this waypoint
       std_msgs::Bool arrived_at_dest;
@@ -142,11 +117,6 @@ void GPS_Drive::waypoint_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
    // Update destination
    destination_latitude = msg->latitude;
    destination_longitude = msg->longitude;
-}
-
-void GPS_Drive::safe_callback(const std_msgs::Bool::ConstPtr& msg) {
-   // Update whether it is safe to drive
-   safe = msg->data;
 }
 
 int main(int argc, char** argv) {
