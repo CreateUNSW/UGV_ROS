@@ -74,12 +74,12 @@ void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
           }
 
           // Turn to radians
-          double heading_rad = (heading_deg/2)*M_PI/180;
+          double heading_rad = heading_deg*M_PI/180;
 
           // Publish a movement message to swerve around the obstacle
           ugv_nav::Movement movement_msg;
           // TODO: does this need to be halved?
-          movement_msg.heading = heading_rad;
+          movement_msg.heading = heading_rad/2;
           movement_msg.magnitude = 0.7;
           movement_pub.publish(movement_msg);
       }
