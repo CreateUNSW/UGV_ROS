@@ -24,7 +24,7 @@ using namespace std;
 
 class Motornav_Com {
 public:
-    Motornav_Com(ros::NodeHandle n, char** argv);
+    Motornav_Com(ros::NodeHandle n);
     void sendMovement();
 private:
     ros::NodeHandle n;
@@ -43,16 +43,19 @@ private:
     void movement_callback(const ugv_nav::Movement::ConstPtr& msg);
 };
 
-Motornav_Com::Motornav_Com(ros::NodeHandle n, char** argv) : n{n} {
+//Motornav_Com::Motornav_Com(ros::NodeHandle n, char** argv) : n{n} {
+Motornav_Com::Motornav_Com(ros::NodeHandle n) : n{n} {
 
    movement_sub = n.subscribe("ugv_nav/movement", 1, &Motornav_Com::movement_callback, this);
 
    char setupString[200];
    strcpy(setupString, "stty -F ");
-   strcat(setupString, argv[1]);
+   //strcat(setupString, argv[1]);
+   strcat(setupString, "/dev/ttyACM0");
    strcat(setupString, " cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts");
    system(setupString); //Activates the tty connection with the Arduino
-   comPort.open(argv[1]);
+   //comPort.open(argv[1]);
+   comPort.open("/dev/ttyACM0");
    long int t = time(NULL);
    while (time(NULL)-t < 5) {};
 
@@ -118,12 +121,15 @@ int main(int argc, char** argv){
    // Set up the rate of 100 Hz
    ros::Rate rate(10); // I haven't tested this past 10 Hz, 30 Hz causes it to fail
 
+   /*
    if (argc <= 1) {
       ROS_INFO("Usage: please give the comport to communicate on as the first argument (i.e. /dev/ttyACM0)");
       return 1;
    }
+   */
 
-   Motornav_Com mnc(n, argv);
+   Motornav_Com mnc(n);
+   //Motornav_Com mnc(n, argv);
    ROS_INFO("motornav_com setup successfully");
    /*
    while (ros::ok()) {
