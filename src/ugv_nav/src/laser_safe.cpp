@@ -63,22 +63,22 @@ void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
    std_msgs::Bool safe;
    obstacle_type currentView = inRange(msg->ranges);
    if (currentView!=TOO_CLOSE&&continue_driving) {
-        ugv_nav::Movement movement_msg;
-        double heading_deg;
+      ugv_nav::Movement movement_msg;
+      double heading_deg;
       if(currentView==IN_RANGE){
-          int desired_heading_transform = desired_heading + MIDDLE_RANGE;
-          int safeIndex = getBestHeading(msg->ranges,desired_heading_transform);
-          if(safeIndex>=0){
-              // Calculate bearing to this safe index
-              // Heading in local coordinates
-              heading_deg = safeIndex - MIDDLE_RANGE;
-              // -180 < heading_deg <= 180
-          } else {
-              // no way around
-              return;
-          }
+         int desired_heading_transform = desired_heading + MIDDLE_RANGE;
+         int safeIndex = getBestHeading(msg->ranges,desired_heading_transform);
+         if(safeIndex>=0){
+            // Calculate bearing to this safe index
+            // Heading in local coordinates
+            heading_deg = safeIndex - MIDDLE_RANGE;
+            // -180 < heading_deg <= 180
+         } else {
+            // no way around
+            return;
+         }
       } else {
-          heading_deg = desired_heading;
+         heading_deg = desired_heading/2;
       }
 
       if (heading_deg > 180){
@@ -92,25 +92,23 @@ void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
       // Publish a movement message to swerve around the obstacle
 
-      // TODO: does this need to be halved?
-      movement_msg.heading = heading_rad/2;
+      movement_msg.heading = heading_rad;
       movement_msg.magnitude = 0.7;
       movement_pub.publish(movement_msg);
    }
-
 }
 
 void Laser::heading_callback(const std_msgs::Float32::ConstPtr & msg){
-    desired_heading = (int)msg->data;
-    continue_driving = true;
+   desired_heading = (int)msg->data;
+   continue_driving = true;
 }
 
 void Laser::arrived_callback(const std_msgs::Bool::ConstPtr& msg){
-    continue_driving = false;
+   continue_driving = false;
 }
 
 obstacle_type Laser::inRange(vector<float> ranges) const {
-    obstacle_type ret = CLEAR;
+   obstacle_type ret = CLEAR;
    for (int i = MIN_RANGE; i <= MAX_RANGE; ++i) {
       if (ranges[i] != 0.0) {
          if( ranges[i] < SAFE_DISTANCE) {
@@ -124,49 +122,46 @@ obstacle_type Laser::inRange(vector<float> ranges) const {
 }
 
 int Laser::getBestHeading(vector<float> ranges, int desired_heading_transform) const {
-    int obstacles[RANGES] = {0};
-    int best_heading = -1;
-    double angle_buffer_rad;
-    int angle_buffer_deg = 0;
-    // populate obstacles array by padding each obstacle reading on both sides
-    // first, sweep one way, right to left
-    for (int i = MIN_RANGE; i <= MAX_RANGE; ++i) {
-        if (ranges[i] != 0.0 && ranges[i] < DETECT_RANGE) {
-            angle_buffer_rad = atan(SAFE_DISTANCE/ranges[i]);
-            angle_buffer_deg = fmax(angle_buffer_deg,floor(angle_buffer_rad * 180/M_PI));
-        }
-        if(angle_buffer_deg>0){
-            obstacles[i] = 1;
-            angle_buffer_deg--;
-        }
-
-    }
-    // then, sweep the other way
-    angle_buffer_deg = 0;
-    for (int i = MAX_RANGE; i>=MIN_RANGE; --i) {
-        if (ranges[i] != 0.0 && ranges[i] < DETECT_RANGE) {
-            angle_buffer_rad = atan(SAFE_DISTANCE/ranges[i]);
-            angle_buffer_deg = fmax(angle_buffer_deg,floor(angle_buffer_rad * 180/M_PI));
-        }
-        if(angle_buffer_deg>0){
-            obstacles[i] = 1;
-            angle_buffer_deg--;
-        }
-    }
-    //then, get the viewable angle free of obstacles closest to desired heading
-    for (int i = MIN_RANGE,abs_diff = 1000; i <= MAX_RANGE; ++i) {
-        if (obstacles[i]==0){
-            if(fabs(i-desired_heading_transform)<abs_diff){
-              best_heading = i;
-              abs_diff = fabs(i-desired_heading_transform);
-            }
-        }
-    }
-    return best_heading;
+   // note: no value in ranges can be less than SAFE_DISTANCE for this function to work
+   int obstacles[RANGES] = {0};
+   int best_heading = -1;
+   double angle_buffer_rad;
+   int angle_buffer_deg = 0;
+   // populate obstacles array by padding each obstacle reading on both sides
+   // first, sweep one way, right to left
+   for (int i = MIN_RANGE; i <= MAX_RANGE; ++i) {
+      if (ranges[i] != 0.0 && ranges[i] < DETECT_RANGE) {
+         angle_buffer_rad = asin(SAFE_DISTANCE/ranges[i]);
+         angle_buffer_deg = fmax(angle_buffer_deg,floor(angle_buffer_rad * 180/M_PI));
+      }
+      if(angle_buffer_deg>0){
+         obstacles[i] = 1;
+         angle_buffer_deg--;
+      }
+   }
+   // then, sweep the other way
+   angle_buffer_deg = 0;
+   for (int i = MAX_RANGE; i>=MIN_RANGE; --i) {
+      if (ranges[i] != 0.0 && ranges[i] < DETECT_RANGE) {
+         angle_buffer_rad = asin(SAFE_DISTANCE/ranges[i]);
+         angle_buffer_deg = fmax(angle_buffer_deg,floor(angle_buffer_rad * 180/M_PI));
+      }
+      if(angle_buffer_deg>0){
+         obstacles[i] = 1;
+         angle_buffer_deg--;
+      }
+   }
+   //then, get the viewable angle free of obstacles closest to desired heading
+   for (int i = MIN_RANGE,abs_diff = 1000; i <= MAX_RANGE; ++i) {
+      if (obstacles[i]==0){
+         if(fabs(i-desired_heading_transform)<abs_diff){
+            best_heading = i;
+            abs_diff = fabs(i-desired_heading_transform);
+         }
+      }
+   }
+   return best_heading;
 }
-
-
-
 
 int main (int argc, char *argv[]) {
    // Initialising the ros node
