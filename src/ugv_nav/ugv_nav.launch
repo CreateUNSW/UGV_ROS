@@ -1,6 +1,6 @@
 <launch>
     <node name="motornav_com" pkg="ugv_nav" type="motordata_arduino_send" output="screen"/>
     <node name="gps_drive" pkg="ugv_nav" type="gps_drive" output="screen"/>
-    <node name="cfg_parser" pkg="ugv_nav" type="cfg_parser" output="screen"/>
+    <!--<node name="cfg_parser" pkg="ugv_nav" type="cfg_parser" output="screen"/>-->
     <node name="laser_safe" pkg="ugv_nav" type="laser_safe" output="screen"/>
 </launch>

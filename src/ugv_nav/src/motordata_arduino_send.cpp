@@ -107,7 +107,7 @@ void Motornav_Com::sendMovement() {
 
       // Write these bytes to the Com Port
 
-		ROS_INFO_STREAM("theta " << theta_d << " mag " << r_d);
+		//ROS_INFO_STREAM("theta " << theta_d << " mag " << r_d);
 		comPort.write(buffer, MOTORDRIVER_COMBUFFER_LENGTH);
 		comPort.flush();
 	}

@@ -19,8 +19,8 @@
 
 #define RANGES 271
 #define MIDDLE_RANGE 135
-#define MIN_RANGE 60
-#define MAX_RANGE 210
+#define MIN_RANGE 90
+#define MAX_RANGE 180
 
 #define SAFE_DISTANCE 0.7
 #define DETECT_RANGE 3
@@ -60,26 +60,28 @@ Laser::Laser(ros::NodeHandle n) : n{n} {
 }
 
 void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
-   std_msgs::Bool safe;
    obstacle_type currentView = inRange(msg->ranges);
    if (currentView!=TOO_CLOSE&&continue_driving) {
       ugv_nav::Movement movement_msg;
       double heading_deg;
-      if(currentView==IN_RANGE){
+      /*if(currentView==IN_RANGE){
          int desired_heading_transform = desired_heading + MIDDLE_RANGE;
          int safeIndex = getBestHeading(msg->ranges,desired_heading_transform);
+	 printf("Obstacle detected!\n");
          if(safeIndex>=0){
             // Calculate bearing to this safe index
             // Heading in local coordinates
             heading_deg = safeIndex - MIDDLE_RANGE;
             // -180 < heading_deg <= 180
+	   printf("Obstacle avoided.\n");
          } else {
             // no way around
+	    printf("Obstacle unavoidable!\n");
             return;
          }
-      } else {
+      } else {*/
          heading_deg = desired_heading/2;
-      }
+      //}
 
       if (heading_deg > 180){
          heading_deg -= 360;
@@ -95,6 +97,8 @@ void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
       movement_msg.heading = heading_rad;
       movement_msg.magnitude = 0.7;
       movement_pub.publish(movement_msg);
+   } else if(currentView==TOO_CLOSE){
+      printf("Too close!\n");
    }
 }
 
