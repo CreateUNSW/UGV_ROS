@@ -19,8 +19,8 @@
 
 #define RANGES 271
 #define MIDDLE_RANGE 135
-#define MIN_RANGE 90
-#define MAX_RANGE 180
+#define MIN_RANGE 60
+#define MAX_RANGE 210
 
 #define SAFE_DISTANCE 0.7
 #define DETECT_RANGE 3
@@ -64,14 +64,14 @@ void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
    if (currentView!=TOO_CLOSE&&continue_driving) {
       ugv_nav::Movement movement_msg;
       double heading_deg;
-      /*if(currentView==IN_RANGE){
-         int desired_heading_transform = desired_heading + MIDDLE_RANGE;
+      if(currentView==IN_RANGE){
+         int desired_heading_transform = MIDDLE_RANGE - desired_heading;
          int safeIndex = getBestHeading(msg->ranges,desired_heading_transform);
 	 printf("Obstacle detected!\n");
          if(safeIndex>=0){
             // Calculate bearing to this safe index
             // Heading in local coordinates
-            heading_deg = safeIndex - MIDDLE_RANGE;
+            heading_deg = (MIDDLE_RANGE-safeIndex)/2;
             // -180 < heading_deg <= 180
 	   printf("Obstacle avoided.\n");
          } else {
@@ -79,9 +79,10 @@ void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 	    printf("Obstacle unavoidable!\n");
             return;
          }
-      } else {*/
+      } else {
          heading_deg = desired_heading/2;
-      //}
+	 printf("No obstacles!\n");
+      }
 
       if (heading_deg > 180){
          heading_deg -= 360;
@@ -154,7 +155,9 @@ int Laser::getBestHeading(vector<float> ranges, int desired_heading_transform) c
          obstacles[i] = 1;
          angle_buffer_deg--;
       }
+      printf("%d",obstacles[i]);
    }
+   printf("\n");
    //then, get the viewable angle free of obstacles closest to desired heading
    for (int i = MIN_RANGE,abs_diff = 1000; i <= MAX_RANGE; ++i) {
       if (obstacles[i]==0){
@@ -164,6 +167,7 @@ int Laser::getBestHeading(vector<float> ranges, int desired_heading_transform) c
          }
       }
    }
+   printf("best heading = %d\n",best_heading);
    return best_heading;
 }
 
