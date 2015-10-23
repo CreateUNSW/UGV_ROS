@@ -49,7 +49,8 @@ private:
    void waypoint_callback(const sensor_msgs::NavSatFix::ConstPtr& msg);
    void safe_callback(const std_msgs::Bool::ConstPtr& msg);
 
-   bool start = false;
+   bool waypointReceived = false;
+   bool fixAttained = false;
 };
 
 GPS_Drive::GPS_Drive(ros::NodeHandle n) : n{n} {
@@ -63,9 +64,9 @@ GPS_Drive::GPS_Drive(ros::NodeHandle n) : n{n} {
 void GPS_Drive::gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
    source_latitude = msg->latitude;
    source_longitude = msg->longitude;
-
+   fixAttained = true;
    printf("Current GPS fix,  lat: %lf, long: %lf\n", source_latitude, source_longitude);
-   if(!start)
+   if(!waypointReceived)
       return;
    printf("We want to go to destination,  lat: %lf, long: %lf\n", destination_latitude, destination_longitude);
 
@@ -94,7 +95,7 @@ void GPS_Drive::mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg){
     if(current_heading<=-180){
 	current_heading+=360;
    }
-   if(!start)
+   if(!fixAttained||!waypointReceived)
       return;
    diff_heading = desired_heading - current_heading;
    // normalize to range of -180 to +180 with clockwise as positive
@@ -122,8 +123,7 @@ void GPS_Drive::waypoint_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
    // Update destination
    destination_latitude = msg->latitude;
    destination_longitude = msg->longitude;
-   if(!start)
-      start = true;
+   waypointReceived = true;
 }
 
 int main(int argc, char** argv) {

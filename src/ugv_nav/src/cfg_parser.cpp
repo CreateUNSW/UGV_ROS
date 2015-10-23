@@ -31,11 +31,11 @@ private:
 };
 
 Cfg_Parser::Cfg_Parser(ros::NodeHandle n) : n{n} {
-   waypoint_pub = n.advertise<sensor_msgs::NavSatFix>("/ugv_nav/waypoints", 1);
+   waypoint_pub = n.advertise<sensor_msgs::NavSatFix>("/ugv_nav/waypoints", 100);
    arrived_sub = n.subscribe("/ugv_nav/arrived", 1, &Cfg_Parser::arrived_callback, this);
    parseFile();
 
-   ros::Rate rate(10); 
+   ros::Rate rate(2); 
 
    while (ros::ok()) {
       // Spin once to get any arrived messages
@@ -53,7 +53,7 @@ Cfg_Parser::Cfg_Parser(ros::NodeHandle n) : n{n} {
 void Cfg_Parser::parseFile() {
    vector<string> list;
    string word;
-   ifstream file("gps_cfg");
+   ifstream file("gps_cfg",ifstream::in);
 
    if (!file) {
       cerr << "Unable to open file" << endl;
@@ -81,6 +81,7 @@ void Cfg_Parser::parseFile() {
       waypoints.push_back(location);
    }
    file.close();
+   printf("End of file\n");
 }
 
 bool Cfg_Parser::hasNextDestination() const {
