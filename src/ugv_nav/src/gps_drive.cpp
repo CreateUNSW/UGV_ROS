@@ -81,6 +81,12 @@ void GPS_Drive::gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
    printf("Difference in lat: %lf, long: %lf\n", difference_lat, difference_long);
 
    distance_to_go = sqrt(difference_lat*difference_lat+difference_long*difference_long)*111000.0;
+   if(distance_to_go<5){
+     std_msgs::Bool arrived_at_dest;
+     arrived_at_dest.data = true;
+     arrived_pub.publish(arrived_at_dest);
+   }
+
    // note: clockwise is positive direction
    desired_heading = atan2(difference_long, difference_lat)*180.0/M_PI;
 
@@ -122,9 +128,9 @@ void GPS_Drive::mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg){
       desired_heading_pub.publish(new_heading);
    } else {
       // Publish message to signal that we have arrived at this waypoint
-      std_msgs::Bool arrived_at_dest;
-      arrived_at_dest.data = true;
-      arrived_pub.publish(arrived_at_dest);
+     // std_msgs::Bool arrived_at_dest;
+     // arrived_at_dest.data = true;
+     // arrived_pub.publish(arrived_at_dest);
    }
 }
 
@@ -136,7 +142,6 @@ void GPS_Drive::waypoint_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
    } else if(!waypointReceived){
       start_latitude = source_latitude;
       start_longitude = source_longitude;
-      start_to_dest_heading =
       waypointReceived = true;
    } else if(destination_latitude!=msg->latitude&&destination_longitude!=msg->longitude){
       start_latitude = destination_latitude;
