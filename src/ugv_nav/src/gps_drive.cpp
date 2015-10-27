@@ -44,6 +44,11 @@ private:
    double destination_latitude;
    double destination_longitude;
 
+   double start_latitude;
+   double start_longitude;
+
+   double start_to_dest_heading;
+
    void gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg);
    void mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg);
    void waypoint_callback(const sensor_msgs::NavSatFix::ConstPtr& msg);
@@ -78,6 +83,10 @@ void GPS_Drive::gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
    distance_to_go = sqrt(difference_lat*difference_lat+difference_long*difference_long)*111000.0;
    // note: clockwise is positive direction
    desired_heading = atan2(difference_long, difference_lat)*180.0/M_PI;
+
+   // add bias back to straight line path
+   double scale_offset = 2.0;
+   desired_heading += scale_offset*distance_to_go*sin((desired_heading-start_to_dest_heading)*M_PI/180);
 
    printf("Global angle to our destination %lf degrees\n", desired_heading);
    printf("Distance to our destination %lf\n", distance_to_go);
@@ -121,9 +130,25 @@ void GPS_Drive::mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg){
 
 void GPS_Drive::waypoint_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
    // Update destination
+   if(!fixAttained){
+      // do nothing
+      return;
+   } else if(!waypointReceived){
+      start_latitude = source_latitude;
+      start_longitude = source_longitude;
+      start_to_dest_heading =
+      waypointReceived = true;
+   } else if(destination_latitude!=msg->latitude&&destination_longitude!=msg->longitude){
+      start_latitude = destination_latitude;
+      start_longitude = destination_longitude;
+   } else {
+      return;
+   }
    destination_latitude = msg->latitude;
    destination_longitude = msg->longitude;
-   waypointReceived = true;
+   double difference_lat = destination_latitude - start_latitude;
+   double difference_long =  destination_longitude - start_longitude;
+   start_to_dest_heading = atan2(difference_long, difference_lat)*180.0/M_PI;
 }
 
 int main(int argc, char** argv) {
