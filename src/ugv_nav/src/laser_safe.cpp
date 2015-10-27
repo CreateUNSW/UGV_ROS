@@ -67,13 +67,13 @@ void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
       if(currentView==IN_RANGE){
          int desired_heading_transform = MIDDLE_RANGE - desired_heading;
          int safeIndex = getBestHeading(msg->ranges,desired_heading_transform);
-	 printf("Obstacle detected!\n");
+	 //printf("Obstacle detected!\n");
          if(safeIndex>=0){
             // Calculate bearing to this safe index
             // Heading in local coordinates
             heading_deg = (MIDDLE_RANGE-safeIndex)/2;
             // -180 < heading_deg <= 180
-	   printf("Obstacle avoided.\n");
+	   //printf("Obstacle avoided.\n");
          } else {
             // no way around
 	    printf("Obstacle unavoidable!\n");
@@ -81,7 +81,7 @@ void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
          }
       } else {
          heading_deg = desired_heading/2;
-	 printf("No obstacles!\n");
+	 //printf("No obstacles!\n");
       }
 
       if (heading_deg > 180){
@@ -155,9 +155,9 @@ int Laser::getBestHeading(vector<float> ranges, int desired_heading_transform) c
          obstacles[i] = 1;
          angle_buffer_deg--;
       }
-      printf("%d",obstacles[i]);
+      //printf("%d",obstacles[i]);
    }
-   printf("\n");
+   //printf("\n");
    //then, get the viewable angle free of obstacles closest to desired heading
    for (int i = MIN_RANGE,abs_diff = 1000; i <= MAX_RANGE; ++i) {
       if (obstacles[i]==0){
@@ -167,7 +167,7 @@ int Laser::getBestHeading(vector<float> ranges, int desired_heading_transform) c
          }
       }
    }
-   printf("best heading = %d\n",best_heading);
+   //printf("best heading = %d\n",best_heading);
    return best_heading;
 }
 
