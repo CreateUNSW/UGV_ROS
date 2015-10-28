@@ -11,6 +11,8 @@
 #include <cmath>
 #include <sstream>
 
+#include <sensor_msgs/NavSatFix.h>
+
 #define MY_PORT 9999
 #define SERVER_IP "25.55.128.91"
 
@@ -30,7 +32,7 @@ int main(int argc, char *argv[])
    sensor_msgs::NavSatFix rtk_gps_msg;
    ros::Publisher rtk_gps_pub = n.advertise<sensor_msgs::NavSatFix>("/ugv_nav/rtk_fix", 1);
 
-   int sockfd, portno, n;
+   int sockfd, portno;
    struct sockaddr_in serv_addr;
    struct hostent *server;
 
@@ -57,16 +59,16 @@ int main(int argc, char *argv[])
       error("ERROR connecting");
 
 
-   int i,j;
+   int i,j,k;
    while(ros::ok()){
       bzero(buffer,256);
-      n = read(sockfd,buffer,255);
-      if (n < 0) {
+      k = read(sockfd,buffer,255);
+      if (k < 0) {
          //error("ERROR reading from socket");
       } else {
-         for(i = 0; i<n; i++){
+         for(i = 0; i<k; i++){
             buffer2 += buffer[i];
-            if(buffer[i] = '\n'){
+            if(buffer[i] == '\n'){
                stringstream ssin(buffer2);
                //cout << ssin.str() << endl;
                j = 0;
@@ -79,11 +81,11 @@ int main(int argc, char *argv[])
                // For debug
                printf("%lf %lf\n", rtk_gps_msg.latitude, rtk_gps_msg.longitude);
                rtk_gps_pub.publish(rtk_gps_msg);
-               ros::spinOnce();
                buffer2.clear();
             }
          }
       }
+      ros::spinOnce();
    }
    close(sockfd);
    return (0);
