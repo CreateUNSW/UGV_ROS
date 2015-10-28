@@ -24,19 +24,19 @@ int main(int argc, char** argv){
     sensor_msgs::NavSatFix rtk_gps_msg;
     ros::Publisher rtk_gps_pub = n.advertise<sensor_msgs::NavSatFix>("/ugv_nav/rtk_fix", 1);
 
-   string gps_words[3];
+   string gps_words[4];
    int i;
    while(ros::ok()){
       std::getline (std::cin,line);
       stringstream ssin(line);
 cout << ssin.str() << endl;
       i = 0;
-      while (ssin.good() && i < 3){
+      while (ssin.good() && i < 4){
         ssin >> gps_words[i];
         ++i;
       }
-      rtk_gps_msg.latitude = atof(gps_words[1].c_str());
-      rtk_gps_msg.longitude = atof(gps_words[2].c_str());
+      rtk_gps_msg.latitude = atof(gps_words[2].c_str());
+      rtk_gps_msg.longitude = atof(gps_words[3].c_str());
       // For debug
       printf("%lf %lf\n", rtk_gps_msg.latitude, rtk_gps_msg.longitude);
 
