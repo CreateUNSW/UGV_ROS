@@ -16,7 +16,8 @@
 using namespace std;
 
 #define PHONE_OFFSET_ANGLE 90   // Angle of phone in comparison to robot
-
+#define RTK_BUFFER_SIZE 5
+#define RTK_TIMEOUT 5
 
 /* This program will read values from /heading and /magnitude,
  * convert them to motor driver input and send them to
@@ -29,6 +30,7 @@ private:
    ros::NodeHandle n;
    ros::Subscriber phone_gps_sub;
    ros::Subscriber phone_mag_sub;
+   ros::Subscriber rtk_gps_sub;
    ros::Subscriber waypoint_sub;
    ros::Publisher desired_heading_pub;
    ros::Publisher arrived_pub;
@@ -50,25 +52,67 @@ private:
    double start_to_dest_heading;
 
    void gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg);
+   void rtk_gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg);
    void mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg);
    void waypoint_callback(const sensor_msgs::NavSatFix::ConstPtr& msg);
-   void safe_callback(const std_msgs::Bool::ConstPtr& msg);
+
+   void update_coordinates(double newLatitude, double newLongitude);
 
    bool waypointReceived = false;
    bool fixAttained = false;
+   bool rtkFixAttained = false;
+   int rtkTimeoutCount = 0;
+   double rtkBuffer[RTK_BUFFER_SIZE][2] = {{0},{0}};
+   int rtkBuffCount = 0;
 };
 
 GPS_Drive::GPS_Drive(ros::NodeHandle n) : n{n} {
    phone_gps_sub = n.subscribe("/phone1/android/fix", 1, &GPS_Drive::gps_callback, this);
    phone_mag_sub = n.subscribe("/phone1/android/magnetic_field", 1, &GPS_Drive::mag_callback, this);
+   rtk_gps_sub = n.subscribe("/ugv_nav/rtk_fix", 1, &GPS_Drive::rtk_gps_callback, this);
    waypoint_sub = n.subscribe("/ugv_nav/waypoints", 1, &GPS_Drive::waypoint_callback, this);
    desired_heading_pub = n.advertise<std_msgs::Float32>("/ugv_nav/desired_heading", 1);
    arrived_pub = n.advertise<std_msgs::Bool>("/ugv_nav/arrived", 1);
 }
 
 void GPS_Drive::gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
-   source_latitude = msg->latitude;
-   source_longitude = msg->longitude;
+   
+   rtkTimeoutCount++;
+   if(rtkTimeoutCount<RTK_TIMEOUT){
+      return;
+   } else {
+      rtkFixAttained = false;
+   }
+   fixAttained = true;
+   update_coordinates(msg->latitude,msg->longitude);
+}
+
+void GPS_Drive::rtk_gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg){
+   rtkBuffer[rtkBuffCount][0] = msg->latitude;
+   rtkBuffer[rtkBuffCount][1] = msg->longitude;
+   rtkBuffCount = (rtkBuffCount + 1) % RTK_BUFFER_SIZE;
+   double meanRTK[2] = {0,0};
+   int i; double d, difference_lat, difference_long;
+   for(i = 0; i<RTK_BUFFER_SIZE; i++){
+      meanRTK[0]+=rtkBuffer[i][0]/RTK_BUFFER_SIZE;
+      meanRTK[1]+=rtkBuffer[i][1]/RTK_BUFFER_SIZE;
+   }
+   for(i = 0; i<RTK_BUFFER_SIZE; i++){
+      difference_lat = meanRTK[0] - rtkBuffer[i][0];
+      difference_long = meanRTK[1] - rtkBuffer[i][1];
+      d =sqrt(difference_lat*difference_lat+difference_long*difference_long);
+      if(d>8){
+         return;
+      }
+   }
+   rtkTimeoutCount = 0;
+   rtkFixAttained = true;
+   update_coordinates(msg->latitude,msg->longitude);
+}
+
+void GPS_Drive::update_coordinates(double newLatitude, double newLongitude){
+   source_latitude = newLatitude;
+   source_longitude = newLongitude;
    fixAttained = true;
    printf("Current GPS fix,  lat: %lf, long: %lf\n", source_latitude, source_longitude);
    if(!waypointReceived)
@@ -110,7 +154,7 @@ void GPS_Drive::mag_callback(const sensor_msgs::MagneticField::ConstPtr& msg){
     if(current_heading<=-180){
 	current_heading+=360;
    }
-   if(!fixAttained||!waypointReceived)
+   if(!(fixAttained||rtkFixAttained)||!waypointReceived)
       return;
    diff_heading = desired_heading - current_heading;
    // normalize to range of -180 to +180 with clockwise as positive

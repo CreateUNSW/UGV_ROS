@@ -24,6 +24,7 @@
 
 #define SAFE_DISTANCE 0.7
 #define DETECT_RANGE 3
+#define MAX_TURNING_ANGLE 30
 
 typedef enum {TOO_CLOSE,IN_RANGE,CLEAR} obstacle_type;
 
@@ -89,7 +90,9 @@ void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
       } else if (heading_deg <= -180){
          heading_deg += 360;
       }
-
+      
+      heading_deg = fmin(heading_deg,MAX_TURNING_ANGLE);
+      heading_deg = fmax(heading_deg,-MAX_TURNING_ANGLE);
       // Turn to radians
       double heading_rad = heading_deg*M_PI/180;
 
