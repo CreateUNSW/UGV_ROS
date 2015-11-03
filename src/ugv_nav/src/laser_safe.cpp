@@ -119,7 +119,7 @@ obstacle_type Laser::inRange(vector<float> ranges) const {
    obstacle_type ret = CLEAR;
    for (int i = MIN_RANGE; i <= MAX_RANGE; ++i) {
       if (ranges[i] != 0.0) {
-         if( ranges[i] < SAFE_DISTANCE) {
+         if( ranges[i] < SAFE_DISTANCE && ranges[i+1] < SAFE_DISTANCE) {
             return TOO_CLOSE;
          } else if (ranges[i]<DETECT_RANGE) {
              ret = IN_RANGE;
