@@ -104,7 +104,7 @@ To achieve the objective, the robot is equipped with a GPS and compass (using an
 
 \subsubsection{Software}
 
-On the software side, five/six(?????) modules/nodes run in conjunction to operate the robot:
+On the software side, five/six(?????) nodes run in conjunction to operate the robot:
 
 \verb|dest_sender| keeps track of the robot's remaining waypoints.
 
@@ -127,9 +127,16 @@ On the software side, five/six(?????) modules/nodes run in conjunction to operat
 TODO: Generate rqt\_graph of nodes talking to each other
 
 \subsection{Planner}
-destsender
+The planner module is responsible for keeping track of the robot's waypoints and informs the robot of its next destination. 
+
+The \verb|dest_sender| node parses a file containing the GPS coordinates of waypoints and turns each latitude-longitude pair into a NavSatFix message. Each waypoint is stored in a list (as a NavSatFix message), with the head of the list being the robot's next destination. \verb|dest_sender| publishes this message to the \verb|ugv_nav/waypoints| topic for other modules to subscribe to.
+
+\verb|dest_sender| subscribes to the \verb|ugv_nav/arrived| topic, which signals when the robot has reached its destination. Messages which are published to the \verb|ugv_nav/arrived| topic trigger a callback which removes the current waypoint from the list (i.e. the head of the list). If the robot has not reached its final destination and the list is not empty, the robot's next destination is published.
+
 \subsection{Localisation}
-gpsdrive
+The localisation module is responsible for calculating the heading from the robot's current position to its destination.
+
+
 \subsection{Waypoint Traversal}
 lasersafe, motordata
 
@@ -143,5 +150,48 @@ lasersafe, motordata
 
 \pagebreak
 \section{Appendix}
+
+
+\subsection{sensor\_msgs/NavSatFix.msg}
+\begin{lstlisting}[language=C++]
+Header header
+
+/* Satellite fix status information */
+NavSatStatus status
+
+/* Latitude [degrees]. Positive is north of equator; negative is south. */
+float64 latitude
+
+/* Longitude [degrees]. Positive is east of prime meridian; negative is west. */
+float64 longitude
+
+/*
+Altitude [m]. Positive is above the WGS 84 ellipsoid
+(quiet NaN if no altitude is available).
+*/
+float64 altitude
+
+/*
+Position covariance [m^2] defined relative to a tangential plane
+through the reported position. The components are East, North, and
+Up (ENU), in row-major order.
+Beware: this coordinate system exhibits singularities at the poles.
+*/
+float64[9] position_covariance
+
+/*
+If the covariance of the fix is known, fill it in completely. If the
+GPS receiver provides the variance of each measurement, put them
+along the diagonal. If only Dilution of Precision is available,
+estimate an approximate covariance from that.
+*/
+uint8 COVARIANCE_TYPE_UNKNOWN = 0
+uint8 COVARIANCE_TYPE_APPROXIMATED = 1
+uint8 COVARIANCE_TYPE_DIAGONAL_KNOWN = 2
+uint8 COVARIANCE_TYPE_KNOWN = 3
+
+uint8 position_covariance_type
+\end{lstlisting}
+
 
 \end{document}
