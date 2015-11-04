@@ -93,18 +93,47 @@
 
 \pagebreak
 \section{Introduction}
-In this assignment, both the hardware and software aspects of robotics were explored. The overall objective was to create a robot that would drive autonomously in an outdoor environment, whilst avoiding any obstacles. A motorised wheelchair was the baseline from which the robot was constructed.
+In this assignment, both the hardware and software aspects of robotics are explored. The overall objective was to create a robot that could drive autonomously in an outdoor environment, whilst avoiding any obstacles. A motorised wheelchair was the baseline from which the robot was constructed.
 
 To achieve the objective, the robot is equipped with a GPS and compass (using an Android phone with ROS). A laser scanner is also attached to the front of the robot, gathering information about the robot's immediate surroundings.
 
 \subsection{Modules}
-Five modules run in conjunction to operate the robot.
+
+\subsubsection{Hardware}
+
+
+\subsubsection{Software}
+
+On the software side, five/six(?????) modules/nodes run in conjunction to operate the robot:
+
+\verb|dest_sender| keeps track of the robot's remaining waypoints.
+
+\verb|gps_drive| publishes the direction in which the robot needs to travel to reach its destination.
+
+\verb|rtk_gps_pub| ...
+
+\verb|laser_safe| publishes movement messages, either directly to the bot's destination, or to avoid an obstacle.
+
+\verb|motordata_arduino_send| ...
+
+\verb|sick_tim| ... (TODO: reference the github)
 
 \pagebreak
 \section{Hardware}
 
 \pagebreak
 \section{Software}
+
+TODO: Generate rqt\_graph of nodes talking to each other
+
+\subsection{Planner}
+destsender
+\subsection{Localisation}
+gpsdrive
+\subsection{Waypoint Traversal}
+lasersafe, motordata
+
+\subsection{Open Source SICK TiM Driver}
 
 \pagebreak
 \section{Results}
