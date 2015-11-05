@@ -129,13 +129,41 @@ TODO: Generate rqt\_graph of nodes talking to each other
 \subsection{Planner}
 The planner module is responsible for keeping track of the robot's waypoints and informs the robot of its next destination. 
 
-The \verb|dest_sender| node parses a file containing the GPS coordinates of waypoints and turns each latitude-longitude pair into a NavSatFix message. Each waypoint is stored in a list (as a NavSatFix message), with the head of the list being the robot's next destination. \verb|dest_sender| publishes this message to the \verb|ugv_nav/waypoints| topic for other modules to subscribe to.
+The \verb|dest_sender| node parses a file containing the GPS coordinates of waypoints and turns each latitude-longitude pair into a NavSatFix message. Each waypoint is stored in a list (as a NavSatFix message), with the head of the list being the robot's next destination. \verb|dest_sender| publishes this message to the \verb|/ugv_nav/waypoints| topic for other modules to subscribe to.
 
-\verb|dest_sender| subscribes to the \verb|ugv_nav/arrived| topic, which signals when the robot has reached its destination. Messages which are published to the \verb|ugv_nav/arrived| topic trigger a callback which removes the current waypoint from the list (i.e. the head of the list). If the robot has not reached its final destination and the list is not empty, the robot's next destination is published.
+\verb|dest_sender| subscribes to the \verb|/ugv_nav/arrived| topic, which signals when the robot has reached its destination. Messages which are published to the \verb|/ugv_nav/arrived| topic trigger a callback which removes the current waypoint from the list (i.e. the head of the list). If the robot has not reached its final destination and the list is not empty, the robot's next destination is published.
 
 \subsection{Localisation}
-The localisation module is responsible for calculating the heading from the robot's current position to its destination.
+The localisation module is responsible for calculating the heading from the robot's current position to its destination and determines a direction in which the robot should travel to reach its goal.
 
+To assist with the autonomous driving, the robot is equipped with an Android phone running the \verb|android_sensors_driver| app which publishes:
+
+\begin{itemize}
+	\item Camera images: \verb|sensor_msgs/CompressedImage| and \verb|sensor_msgs/Image|
+	\item Fluid pressure data: \verb|sensor_msgs/FluidPressure|
+	\item Illuminance data: \verb|sensor_msgs/Illuminance|
+	\item Accelerometer: \verb|sensor_msgs/Imu|
+	\item Magnetic field: \verb|sensor_msgs/MagneticField|
+	\item GPS fixes: \verb|sensor_msgs/NavSatFix|
+	\item Temperature data: \verb|sensor_msgs/Temperature| \\
+\end{itemize}
+
+For the purposes of this assignment, data gathered from the phone's GPS fixes and magnetic fields are used to calculate the bearing of the destination from the robot. The \verb|gps_drive| node performs these calculations - the Android device publishes the GPS coordinates of the robot to the \verb|/phone1/android/fix| topic and the GPS coordinates of the destination are published to the \verb|/ugv_nav/waypoints| topic by the \verb|dest_sender| node.
+
+\begin{align*}
+	\text{difference\_lat}   	&= 	\text{destination\_latitude} - \text{source\_latitude} \\
+	\text{difference\_long}	&= 	\text{destination\_longitude} - \text{source\_longitude} \\
+\end{align*}
+
+\text{As the ???th decimal place provides up to ??? precision:}
+
+\begin{align*}
+	\text{distance\_to\_destination}	&= 	111,000 * \sqrt{(\text{difference\_lat})^2 + (\text{difference\_long})^2}
+\end{align*}
+
+If the distance to the destination is less than 5 (i.e. the robot is within 5 metres of its destination), it is considered to have arrived at its destination. At this stage, the \verb|gps_drive| node will publish a message to the \verb|/ugv_nav/arrived| topic, signalling to the \verb|dest_sender| that the robot has reached its destination and that a new destination is required.
+
+As the robot obtains GPS fixes frequently, it is sensitive to small changes to its position. The frequent updating of the robot's position results in abrupt movement changes as the robot attempts to face the bearing to its destination. In order to reduce the amount of sudden directional changes, rather than continually looking for a straight, direct path to its goal, the direction the robot decides to travel is biased towards a `smooth path'.
 
 \subsection{Waypoint Traversal}
 lasersafe, motordata
