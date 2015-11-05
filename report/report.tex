@@ -148,12 +148,24 @@ To assist with the autonomous driving, the robot is equipped with an Android pho
 	\item Temperature data: \verb|sensor_msgs/Temperature| \\
 \end{itemize}
 
-For the purposes of this assignment, data gathered from the phone's GPS fixes and magnetic fields are used to calculate the bearing of the destination from the robot. The \verb|gps_drive| node performs these calculations - the Android device publishes the GPS coordinates of the robot to the \verb|/phone1/android/fix| topic and the GPS coordinates of the destination are published to the \verb|/ugv_nav/waypoints| topic by the \verb|dest_sender| node.
+For the purposes of this assignment, data gathered from the phone's GPS fixes and magnetic fields are used to calculate the bearing of the destination from the robot. The \verb|gps_drive| node performs these calculations - the Android device publishes the GPS coordinates of the robot to the \verb|/phone1/android/fix| topic and the GPS coordinates of the destination are published to the \verb|/ugv_nav/waypoints| topic by the \verb|dest_sender| node. The Android device also publishes information about the robot's bearings to \verb|/phone1/android/magnetic_field|.
 
 \begin{align*}
 	\text{difference\_lat}   	&= 	\text{destination\_latitude} - \text{source\_latitude} \\
 	\text{difference\_long}	&= 	\text{destination\_longitude} - \text{source\_longitude} \\
 \end{align*}
+
+Supposing the robot is facing true north, then:
+\begin{align*}
+	\theta	&=	\tan^{-1}({\frac{\text{difference\_long}}{\text{difference\_lat}}}),\\
+\end{align*}
+where $\theta$ is the angle the robot must turn to reach its destination.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=1]{bearings.png}
+	\caption{Calculation of the bearing of the destination from the robot, if the robot is facing true north.}
+\end{figure}
 
 \text{As the ???th decimal place provides up to ??? precision:}
 
@@ -164,6 +176,8 @@ For the purposes of this assignment, data gathered from the phone's GPS fixes an
 If the distance to the destination is less than 5 (i.e. the robot is within 5 metres of its destination), it is considered to have arrived at its destination. At this stage, the \verb|gps_drive| node will publish a message to the \verb|/ugv_nav/arrived| topic, signalling to the \verb|dest_sender| that the robot has reached its destination and that a new destination is required.
 
 As the robot obtains GPS fixes frequently, it is sensitive to small changes to its position. The frequent updating of the robot's position results in abrupt movement changes as the robot attempts to face the bearing to its destination. In order to reduce the amount of sudden directional changes, rather than continually looking for a straight, direct path to its goal, the direction the robot decides to travel is biased towards a `smooth path'.
+
+TODO: Explain straight line bias calculations 
 
 \subsection{Waypoint Traversal}
 lasersafe, motordata
