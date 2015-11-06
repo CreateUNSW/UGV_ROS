@@ -7,7 +7,7 @@
 \usepackage{commath}
 \usepackage{mathtools}
 \usepackage{graphicx}
-\usepackage{csquotes}
+%\usepackage{csquotes}
 %\usepackage{dirtytalk}
 \usepackage{hyperref}
 \usepackage{tabto}
@@ -17,6 +17,7 @@
 \usepackage{sidecap}
 \usepackage{wrapfig}
 \usepackage{parskip}
+\usepackage{units}
 
 \usepackage{fancyhdr}
 \usepackage{color}
@@ -93,7 +94,7 @@
 
 \pagebreak
 \section{Introduction}
-In this assignment, both the hardware and software aspects of robotics are explored. The overall objective was to create a robot that could drive autonomously in an outdoor environment, whilst avoiding any obstacles. A motorised wheelchair was the baseline from which the robot was constructed.
+In this assignment, both the hardware and software aspects of robotics are explored. The overall objective was to create a robot that could navigate autonomously in an outdoor environment, whilst avoiding any obstacles. An existing ground vehicle platform developed by student society CREATE UNSW was used as a base for testing.
 
 To achieve the objective, the robot is equipped with a GPS and compass (using an Android phone with ROS). A laser scanner is also attached to the front of the robot, gathering information about the robot's immediate surroundings.
 
@@ -101,25 +102,7 @@ To achieve the objective, the robot is equipped with a GPS and compass (using an
 
 \subsubsection{Hardware}
 
-
-\subsubsection{Software}
-
-On the software side, five/six(?????) nodes run in conjunction to operate the robot:
-
-\verb|dest_sender| keeps track of the robot's remaining waypoints.
-
-\verb|gps_drive| publishes the direction in which the robot needs to travel to reach its destination.
-
-\verb|rtk_gps_pub| ...
-
-\verb|laser_safe| publishes movement messages, either directly to the bot's destination, or to avoid an obstacle.
-
-\verb|motordata_arduino_send| ...
-
-\verb|sick_tim| ... (TODO: reference the github)
-
-\pagebreak
-\section{Hardware}
+The Unmanned Ground Vehicle (UGV) was developed to serve as an autonomous platform for the research and testing of robotic systems. It measures \unit[1]{m} long, and weighs approximately \unit[50]{kg}. The robot was constructed using parts from an electric wheelchair and a custom-design welded steel chassis. The following hardware is contained on board:
 \begin{itemize}
 	\item Dell Latitude E6400 notebook
 	\item SICK TiM551 2D laser scanner
@@ -131,16 +114,33 @@ On the software side, five/six(?????) nodes run in conjunction to operate the ro
 	\item 2 x electric wheelchair motor
 \end{itemize}
 
-\begin{figure}
-	\includegraphics[scale=0.8]{figures/hardware_chart.png}
+The Dell notebook was installed with Ubuntu 14.04 (a.k.a. "Trusty Tahr") and ROS Indigo. Sensors from the phone and laser scanner were integrated in a Local Area Network through a combination of ethernet and wireless connections. A SSH tunnelling engine was installed to allow for remote communication over the internet between enabled devices, including a precise positioning GPS device developed for an undergraduate thesis. 
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.6]{figures/hardware_chart.png}
 	\caption{Hardware map of UGV}
 	\label{figure:hardware_chart}
 \end{figure}
+\pagebreak
+
+\subsubsection{Software}
+
+On the software side, five/six(?????) nodes run in conjunction to operate the robot:
+
+\verb|dest_sender| keeps track of the robot's remaining waypoints.
+
+\verb|gps_drive| calculates and publishes the direction in which the robot needs to travel to reach its destination.
+
+\verb|rtk_gps_pub| publishes the an optional precise position based on real time kinematic GPS solutions with centimetre-level accuracy.
+
+\verb|laser_safe| publishes movement messages, either directly to the bot's destination, or to avoid an obstacle.
+
+\verb|motordata_arduino_send| converts movement messages into serial messages to send to the Arduino that controls the motord driver and drives the robot.
+
+\verb|sick_tim| reads data from the SICK TiM551 2D laser scanner and publishes the data as a \verb|laser_scan| ROS message.
 
 \pagebreak
-\section{Software}
-
-TODO: Generate rqt\_graph of nodes talking to each other
 
 \subsection{Planner}
 The planner module is responsible for keeping track of the robot's waypoints and informs the robot of its next destination. 
