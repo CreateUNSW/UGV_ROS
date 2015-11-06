@@ -103,6 +103,7 @@ To achieve the objective, the robot is equipped with a GPS and compass (using an
 \subsubsection{Hardware}
 
 The Unmanned Ground Vehicle (UGV) was developed to serve as an autonomous platform for the research and testing of robotic systems. It measures \unit[1]{m} long, and weighs approximately \unit[50]{kg}. The robot was constructed using parts from an electric wheelchair and a custom-design welded steel chassis. The following hardware is contained on board:
+
 \begin{itemize}
 	\item Dell Latitude E6400 notebook
 	\item SICK TiM551 2D laser scanner
@@ -141,6 +142,11 @@ On the software side, five/six(?????) nodes run in conjunction to operate the ro
 \verb|sick_tim| reads data from the SICK TiM551 2D laser scanner and publishes the data as a \verb|laser_scan| ROS message.
 
 \pagebreak
+\section{Hardware}
+
+\pagebreak
+\section{Software}
+TODO: Insert RQT graph
 
 \subsection{Planner}
 The planner module is responsible for keeping track of the robot's waypoints and informs the robot of its next destination. 
