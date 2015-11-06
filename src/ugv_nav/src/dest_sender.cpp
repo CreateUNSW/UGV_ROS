@@ -16,9 +16,9 @@
 
 using namespace std;
 
-class Cfg_Parser {
+class Dest_Sender {
 public:
-   Cfg_Parser(ros::NodeHandle);
+   Dest_Sender(ros::NodeHandle);
    bool hasNextDestination() const;
 private:
    ros::NodeHandle n;
@@ -30,9 +30,9 @@ private:
    void arrived_callback(const std_msgs::Bool::ConstPtr& msg);
 };
 
-Cfg_Parser::Cfg_Parser(ros::NodeHandle n) : n{n} {
+Dest_Sender::Dest_Sender(ros::NodeHandle n) : n{n} {
    waypoint_pub = n.advertise<sensor_msgs::NavSatFix>("/ugv_nav/waypoints", 100);
-   arrived_sub = n.subscribe("/ugv_nav/arrived", 1, &Cfg_Parser::arrived_callback, this);
+   arrived_sub = n.subscribe("/ugv_nav/arrived", 1, &Dest_Sender::arrived_callback, this);
    parseFile();
 
    ros::Rate rate(2); 
@@ -50,7 +50,7 @@ Cfg_Parser::Cfg_Parser(ros::NodeHandle n) : n{n} {
    }
 }
 
-void Cfg_Parser::parseFile() {
+void Dest_Sender::parseFile() {
    vector<string> list;
    string word;
    ifstream file("gps_cfg",ifstream::in);
@@ -84,22 +84,22 @@ void Cfg_Parser::parseFile() {
    printf("End of file\n");
 }
 
-bool Cfg_Parser::hasNextDestination() const {
+bool Dest_Sender::hasNextDestination() const {
    return !waypoints.empty();
 }
 
-void Cfg_Parser::arrived_callback(const std_msgs::Bool::ConstPtr& msg) {
+void Dest_Sender::arrived_callback(const std_msgs::Bool::ConstPtr& msg) {
    // Update list
    waypoints.pop_front();
 }
 
 int main (int argc, char *argv[]) {
    // Initialising the ros node
-   ros::init(argc, argv, "cfg_parser");
+   ros::init(argc, argv, "dest_sender");
    ros::NodeHandle n;
 
-   Cfg_Parser parser(n);
-   ROS_INFO("cfg_parser setup successfully");
+   Dest_Sender sender(n);
+   ROS_INFO("dest_sender setup successfully");
 
    return 0;
 }
