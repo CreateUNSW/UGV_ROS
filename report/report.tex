@@ -134,9 +134,9 @@ The \verb|dest_sender| node parses a file containing the GPS coordinates of wayp
 \verb|dest_sender| subscribes to the \verb|/ugv_nav/arrived| topic, which signals when the robot has reached its destination. Messages which are published to the \verb|/ugv_nav/arrived| topic trigger a callback which removes the current waypoint from the list (i.e. the head of the list). If the robot has not reached its final destination and the list is not empty, the robot's next destination is published.
 
 \subsection{Localisation}
-The localisation module is responsible for calculating the heading from the robot's current position to its destination and determines a direction in which the robot should travel to reach its goal.
+The localisation module is responsible for determining the direction in which the robot needs to travel to reach its goal. The robot. In order to determine this direction, the robot must be aware of its position in GPS coordinates, its bearing from true north and the GPS coordinates of its destination.
 
-To assist with the autonomous driving, the robot is equipped with an Android phone running the \verb|android_sensors_driver| app which publishes:
+To obtain this information, the robot is equipped with an Android phone running the \verb|android_sensors_driver| app which publishes:
 
 \begin{itemize}
 	\item Camera images: \verb|sensor_msgs/CompressedImage| and \verb|sensor_msgs/Image|
@@ -148,24 +148,50 @@ To assist with the autonomous driving, the robot is equipped with an Android pho
 	\item Temperature data: \verb|sensor_msgs/Temperature| \\
 \end{itemize}
 
-For the purposes of this assignment, data gathered from the phone's GPS fixes and magnetic fields are used to calculate the bearing of the destination from the robot. The \verb|gps_drive| node performs these calculations - the Android device publishes the GPS coordinates of the robot to the \verb|/phone1/android/fix| topic and the GPS coordinates of the destination are published to the \verb|/ugv_nav/waypoints| topic by the \verb|dest_sender| node. The Android device also publishes information about the robot's bearings to \verb|/phone1/android/magnetic_field|.
+For this assignment, the \verb|gps_drive| node performs these required calculations. In particular, the \verb|gps_drive| node subscribes to the Android device's GPS fixes and magnetic fields (published on the \verb|/phone1/android/fix| and \verb|/phone1/android/magnetic_field| topics respectively). The GPS coordinates of the robot's destination are published to the  \verb|/ugv_nav/waypoints| topic by the \verb|dest_sender| node, which \verb|gps_drive| also subscribes to.
+
+Calculating the bearing of the destination from the robot is dependent on the GPS coordinates of both the robot and the destination.
 
 \begin{align*}
-	\text{difference\_lat}   	&= 	\text{destination\_latitude} - \text{source\_latitude} \\
-	\text{difference\_long}	&= 	\text{destination\_longitude} - \text{source\_longitude} \\
+	\Delta{latitude}   	&= 	\text{destination\_latitude} - \text{robot\_latitude} \\
+	\Delta{longitude}	&= 	\text{destination\_longitude} - \text{robot\_longitude} \\
 \end{align*}
 
-Supposing the robot is facing true north, then:
+Supposing the robot is facing True North, and if $\beta$ is the bearing of the destination from the robot then:
 \begin{align*}
-	\theta	&=	\tan^{-1}({\frac{\text{difference\_long}}{\text{difference\_lat}}}),\\
+	\beta		&=	\tan^{-1}({\frac{\Delta{longitude}}{\Delta{latitude}}}),\\
 \end{align*}
-where $\theta$ is the angle the robot must turn to reach its destination.
+If $\theta$ is the angle the robot must turn to reach its destination, then $\theta = \beta$.
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[scale=1]{bearings.png}
-	\caption{Calculation of the bearing of the destination from the robot, if the robot is facing true north.}
+	\includegraphics[scale=0.5]{bearings.png}
+	\caption{\textbf{Calculation of the bearing of the destination from the robot, if the robot is facing true north.}}
 \end{figure}
+
+
+\pagebreak
+
+
+In the cases where the robot is not facing true north, then:
+\begin{align*}
+	\theta	&=	(-\alpha) + \beta
+\end{align*}
+where:
+\begin{align*}
+	\beta		&=	\tan^{-1}({\frac{\Delta{longitude}}{\Delta{latitude}}})\\ \\
+	\alpha	&=	\tan^{-1}(\frac{\Delta{x}}{\Delta{y}})
+\end{align*}
+and $\Delta{x}$ and $\Delta{y}$ are given from the Android device's magnetic field readings.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.5]{bearingsOffset.png}
+	\caption{\textbf{Calculation of the bearing of the destination from the robot where the robot is not facing true north. NOTE: In this example, $\alpha$ is positive and $\beta$ is negative.}}
+\end{figure}
+
+
+
 
 \text{As the ???th decimal place provides up to ??? precision:}
 
@@ -175,12 +201,59 @@ where $\theta$ is the angle the robot must turn to reach its destination.
 
 If the distance to the destination is less than 5 (i.e. the robot is within 5 metres of its destination), it is considered to have arrived at its destination. At this stage, the \verb|gps_drive| node will publish a message to the \verb|/ugv_nav/arrived| topic, signalling to the \verb|dest_sender| that the robot has reached its destination and that a new destination is required.
 
-As the robot obtains GPS fixes frequently, it is sensitive to small changes to its position. The frequent updating of the robot's position results in abrupt movement changes as the robot attempts to face the bearing to its destination. In order to reduce the amount of sudden directional changes, rather than continually looking for a straight, direct path to its goal, the direction the robot decides to travel is biased towards a `smooth path'.
+
+
+
+As the robot obtains GPS fixes frequently, it is sensitive to small changes to its position. The frequent updating of the robot's GPS fix results in abrupt movement changes as the robot attempts to face the bearing to its destination. In order to reduce the amount of sudden directional changes, rather than continually looking for the most direct path to its goal, the direction the robot decides to travel is biased towards a `smooth path'.
+
 
 TODO: Explain straight line bias calculations 
 
+
+Once these biases have been taken into consideration, the \verb|gps_drive| node publishes the most applicable bearing (as a std\_msgs::Float32 message) for the robot to travel. The waypoint traversal module then performs the applicable actions based on this bearing.
+
 \subsection{Waypoint Traversal}
-lasersafe, motordata
+The waypoint traversal module is responsible for physically getting the robot to its destination. The \verb|gps_drive|, \verb|laser_safe| and \verb|motordata_arduino_send| nodes work in conjunction to achieve this goal.
+
+\subsubsection{Obstacle Avoidance}
+To detect any obstacles in the robot's path, a laser scanner is attached to the front of the robot.
+
+Given a bearing to travel along, the \verb|laser_safe| node will take one of two courses of action. If there is no obstacle in front of the robot, the robot will drive in the direction it was instructed to by the \verb|gps_drive| node. If an obstacle is present, however, the robot's first priority is to avoid colliding with the obstacle. 
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.34]{laser.png}
+	\caption{\textbf{Range of laser scanner.}}
+\end{figure}
+
+Note that for the purposes of this assignment, the robot is instructed to scan for obstacles within a 90\degree field-of-view. That is, obstacles further than 45\degree to the left or right of the centre of the robot are deemed as harmless and are ignored.
+
+\textbf{First Iteration}
+
+The first iteration of obstacle avoidance involves bringing the robot to a complete stop when an obstacle enters the view of the laser scanner. As the UGV's main task is to drive autonomously in outdoor environments, this method proves useful for moving obstacles (e.g. people) that may enter and exit the frame quickly. \\
+
+\textbf{Second Iteration}
+
+The second iteration of obstacle avoidance attempts to drive around obstacles as they enter the danger zone (i.e. 45\degree left and right of the centre of the robot). The robot does this by picking the closest `safe' spot to the left of the obstacle, if possible, and driving towards it. In cases where the obstacle cuts out of the left-hand side of the laser's frame, the closest `safe' spot to the right is chosen. 
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.17]{obstacle2.png}
+	\caption{\textbf{Obstacle avoidance paths.}}
+\end{figure}
+
+Once the robot is clear of all obstacles, it resumes driving towards its destination. \\
+
+\textbf{Final Iteration}
+
+TODO!
+
+
+
+
+\subsubsection{Motor Control}
+
+TODO: motordata arduino send. 
 
 \subsection{Open Source SICK TiM Driver}
 
