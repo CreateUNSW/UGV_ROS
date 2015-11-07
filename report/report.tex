@@ -265,7 +265,7 @@ The first iteration of obstacle avoidance involves bringing the robot to a compl
 
 \textbf{Second Iteration}
 
-The second iteration of obstacle avoidance attempts to drive around obstacles as they enter the danger zone (i.e. 45\degree left and right of the centre of the robot). The robot does this by picking the closest `safe' spot to the left of the obstacle, if possible, and driving towards it. In cases where the obstacle cuts out of the left-hand side of the laser's frame, the closest `safe' spot to the right is chosen. 
+The second iteration of obstacle avoidance attempts to drive around obstacles as they enter the danger zone (i.e. 45\degree left and right of the centre of the robot). The robot does this by picking the closest `safe' spot to the left of the first obstacle, if possible, and drives towards it. In cases where the obstacle cuts out of the left-hand side of the laser's frame, the closest `safe' spot to the right is chosen. 
 
 \begin{figure}[h]
 	\centering
@@ -290,6 +290,24 @@ TODO: motordata arduino send.
 
 \pagebreak
 \section{Results}
+
+The demonstration for the assignment performed well in large open areas with no tall surrounding objects. The main causes for incorrect behaviour were poor GPS fixes, blind spots in the laser scanner and interference with the laser scanner. \\
+
+\textbf{Inaccurate GPS Fixes}
+
+Waypoint traversal relies heavily on the robot being able to pinpoint its precise position. In sheltered areas, or areas with tall buildings or trees, GPS fixes can be inaccurate. Such inaccuracies impact on the accuracy of the calculations performed. The bearing of the destination from the robot's position can be incorrect. The distance the robot must drive before reaching its destination can also be wrong. 
+
+When working with unmanned vehicles, it is particularly important that these calculations are precise and accurate. \\
+
+\textbf{Laser Scanner Blind Spots}
+
+The laser scanner is positioned on the front of the robot, on its base. Sitting at a height of 20cm above the ground, the laser scanner scans on a level plane. Obstacles shorter than 20cm, that lie outside of the laser's view, are essentially driven over or driven through. 
+
+In the case of the demonstration, the robot drove into a brick wall which was just below the laser scanner's view. \\
+
+\textbf{Laser Scanner Interference}
+
+Obstacle avoidance relies entirely on data received from the laser scanner. In areas with reflective surfaces (e.g. mirrors and glass), the reflection interferes with the laser, causing the robot to think there are obstacles even when the path is clear.
 
 \pagebreak
 \section{Future Work and Improvements}
