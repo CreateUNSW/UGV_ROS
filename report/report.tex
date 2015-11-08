@@ -19,7 +19,9 @@
 \usepackage{picinpar}
 \usepackage{parskip}
 \usepackage{units}
+\usepackage{upgreek}
 %\usepackage{tabularx}
+\usepackage{appendix}
 
 \usepackage{fancyhdr}
 \usepackage{color}
@@ -111,6 +113,7 @@ The key hardware elements that combine to provide sensory information, networkin
 	\item A LIDAR that provides a 2D field of view of any nearby obstacles
 	\item A phone that provides GPS and compass data
 	\item A motor controller system and motors that drive the robot
+	\item A real-time kinematic (RTK) GPS positioning module that provides centimetre-level accuracy in good conditions
 \end{itemize}
 
 
@@ -135,7 +138,7 @@ On the software side, six nodes run in conjunction to operate the robot:
 \section{Hardware}
 
 \subsection{Mechanical Structure}
-The Unmanned Ground Vehicle (UGV) was developed to serve as an autonomous platform for the research and testing of robotic systems. It measures \unit[1]{m} long, \unit[0.5]{m} wide, and weighs approximately \unit[50]{kg}. The robot was constructed using parts from an electric wheelchair and a custom-design welded steel chassis, as shown in Figure \ref{figure:ugv_chassis}.
+The Unmanned Ground Vehicle (UGV) was developed to serve as an autonomous platform for the research and testing of robotic systems. It measures \unit[1]{m} long, \unit[0.5]{m} wide, and when fully loaded weighs approximately \unit[50]{kg}. The robot was constructed using parts from an electric wheelchair and a custom-design welded steel chassis, as shown in Figure \ref{figure:ugv_chassis}.
 
 \begin{figure}[h!]
 	\centering
@@ -143,6 +146,78 @@ The Unmanned Ground Vehicle (UGV) was developed to serve as an autonomous platfo
 	\caption{CAD model of chassis of UGV}
 	\label{figure:ugv_chassis}
 \end{figure}
+
+\subsection{Specifications and Drivers}
+\subsubsection{SICK TiM551 2D Laser Scanner}
+
+
+%\begin{table}[h!]
+%	\caption{SICK TiM551 Specifications}
+%	\label{table:spec}
+%	\begin{tabular}{|c|c|}
+%		\hline
+%		Aperture angle & \unit[270]{\degree}\\
+%		Scanning frequency & \unit[15]{Hz}\\
+%		Angular resolution & \unit[1]{\degree}\\
+%		Operating range & \unit[0.05-10]{m}\\
+%		\hline
+%	\end{tabular}
+%\end{table}
+
+
+The 2D laser scanner (shown in \figref{figure:sick_lidar}) is rated outdoor IP67, allowing for use in a variety of weather conditions including bright sunlight. The sensor provides readings up to a maximum range of \unit[10]{m}, giving enough perspective to traverse routes in terrain with complex and even dynamic obstacles. The following specifications detail the capabilities of the sensor: 
+
+\begin{itemize}
+	\item Aperture angle: \unit[270]{\degree}
+	\item Scanning frequency: \unit[15]{Hz}
+	\item Angular resolution: \unit[1]{\degree}
+	\item Operating range: \unit[0.05-10]{m}
+	\item Operating voltage: \unit[9-28]{V} DC
+	\item Power consumption: \unit[3]{W}
+\end{itemize}
+\begin{figure}[h!]
+	\centering
+	
+	\includegraphics[scale=0.2]{figures/sick_lidar.png}
+	\caption{SICK TiM551 2D Laser Scanner}
+	\label{figure:sick_lidar}
+\end{figure}
+
+The device is mounted in a static location on the front of the UGV in the horizontal plane approximately \unit[300]{mm} above ground level. In this position, the view is partially obscured to the sides and behind the laser scanner by the UGV chassis, and therefore the view is limited to a \unit[150]{\degree} sweep to the front of the robot in software.
+
+To obtain data from the laser scanner, the open source \verb|sick_tim| ROS package is used. The package provides a launch file \verb|sick_tim551_2050001.launch|, which reads range data into a \verb|sensor_msgs/LaserScan.msg| that is published every scan frame.
+
+\subsubsection{Android phone GPS and compass}
+
+The robot is equipped with an Android phone running the \verb|android_sensors_driver| application called ROS All Sensors. The app publishes:
+
+\begin{itemize}
+	\item Camera images: \verb|sensor_msgs/CompressedImage| and \verb|sensor_msgs/Image|
+	\item Fluid pressure data: \verb|sensor_msgs/FluidPressure|
+	\item Illuminance data: \verb|sensor_msgs/Illuminance|
+	\item Accelerometer: \verb|sensor_msgs/Imu|
+	\item Magnetic field: \verb|sensor_msgs/MagneticField|
+	\item GPS fixes: \verb|sensor_msgs/NavSatFix|
+	\item Temperature data: \verb|sensor_msgs/Temperature| \\
+\end{itemize}
+
+During operation, camera streaming is not enabled to ensure there is enough bandwidth and processing available for proper operation of all software modules. The GPS receiver is able to use American GPS and Russian GLONASS satellites, and provides a "fix" solution at a rate of \unit[1]{Hz}. The fix solution is formatted as a \verb|sensor_msgs/NavSatFix.msg| (see \appref{appendix:NavSatFix.msg}) All other sensors are published at a rate of \unit[50]{Hz}.
+
+\subsubsection{Arduino and Motor Driver}
+
+The dual-channel motor driver converts a pulsed signal to pulse-width modulated (PWM) output to drive the motors in either direction. The pulse range from control ranges from \unit[1000-2000]{$\upmu$s}, where 1500 is off, 2000 is full forward and 1000 is full reverse. The pulse signals are generated by the Arduino Mega 2560 microcontroller, which is connected via USB to the laptop. The microcontroller is programmed to receive messages in a custom format as follows:
+
+\begin{center}
+	[SAADBB:CC]
+\end{center}
+
+where S is direction of bridge A, either '+' or '-', AA is the PWM of bridge A, from 00 to FF, D is direction of bridge B, either '+' or '-', BB is the PWM of bridge B, also from 00 to FF, and CC is the checksum of the command. The Arduino then scales and converts the command into the appropriate pulse signal timing to output to the dual-channel motor driver.
+
+The Arduino program also includes motor controls that smooth changes in speed and direction to avoid damaging the motors, and a watchdog timer that stops the motors if no new command has been received for \unit[500]{ms}.
+
+\subsubsection{RTK GPS Module}
+
+
 
 \subsection{Integration}
 
@@ -165,50 +240,8 @@ The following hardware is contained on board:
 	\caption{Hardware map of UGV}
 	\label{figure:hardware_chart}
 \end{figure}
-%\pagebreak
 
 The Dell notebook is installed with Ubuntu 14.04 (a.k.a. "Trusty Tahr") and ROS Indigo. Sensors from the phone and laser scanner are integrated in a Local Area Network through a combination of Ethernet and wireless connections. A VPN is installed for remote communication over the internet between networked devices, including a precise positioning GPS device developed for an undergraduate thesis. \unit[24]{V} power from the two lead acid batteries is supplied to the motor driver to power the DC geared motors and integrated solenoid brakes. \unit[12]{V} from one of the batteries is segmented to provide a separate power source for the laser scanner and the router.
-
-\subsection{Hardware specifications}
-\subsubsection{SICK TiM551 2D Laser Scanner}
-
-
-%\begin{table}[h!]
-%	\caption{SICK TiM551 Specifications}
-%	\label{table:spec}
-%	\begin{tabular}{|c|c|}
-%		\hline
-%		Aperture angle & \unit[270]{\degree}\\
-%		Scanning frequency & \unit[15]{Hz}\\
-%		Angular resolution & \unit[1]{\degree}\\
-%		Operating range & \unit[0.05-10]{m}\\
-%		\hline
-%	\end{tabular}
-%\end{table}
-
-
-The 2D laser scanner is rated outdoor IP67, allowing for use in a variety of weather conditions including bright sunlight. The sensor provides readings up to a maximum range of \unit[10]{m}, giving enough perspective to traverse routes in terrain with complex and even dynamic obstacles. The following specifications detail the capabilities of the sensor: 
-
-\begin{itemize}
-	\item Aperture angle: \unit[270]{\degree}
-	\item Scanning frequency: \unit[15]{Hz}
-	\item Angular resolution: \unit[1]{\degree}
-	\item Operating range: \unit[0.05-10]{m}
-	\item Operating voltage: \unit[9-28]{V} DC
-	\item Power consumption: \unit[3]{W}
-\end{itemize}
-\begin{figure}[h!]
-	\centering
-	
-	\includegraphics[scale=0.2]{figures/sick_lidar.png}
-	\caption{SICK TiM551 2D Laser Scanner}
-	\label{figure:sick_lidar}
-\end{figure}
-
-The device is mounted in a static location on the front of the UGV in the horizontal plane approximately \unit[300]{mm} above ground level. In this position, the view is partially obscured to the sides and behind the laser scanner by the UGV chassis, and therefore the view is limited to a \unit[150]{\degree} sweep to the front of the robot in software.
-
-\subsection{Android phone GPS and compass}
-
 
 \pagebreak
 \section{Software}
@@ -221,6 +254,8 @@ Three main modules run in conjunction to govern the UGV: planner, localisation a
 	\caption{\textbf{Rqt graph.}}
 \end{figure}
 
+TODO: Add RTK GPS module sending ugv\_nav/rtk\_fix into gps\_drive.
+
 \subsection{Planner}
 The planner module is responsible for keeping track of the robot's waypoints and informs the robot of its next destination. 
 
@@ -228,27 +263,16 @@ The \verb|dest_sender| node parses a file containing the GPS coordinates of wayp
 
 \verb|dest_sender| subscribes to the \verb|/ugv_nav/arrived| topic, which signals when the robot has reached its destination. Messages which are published to the \verb|/ugv_nav/arrived| topic trigger a callback which removes the current waypoint from the list (i.e. the head of the list). If the robot has not reached its final destination and the list is not empty, the robot's next destination is published.
 
-\pagebreak
-
 \subsection{Localisation}
+
+\subsubsection{UGV position and heading determination}
 The localisation module is responsible for determining the direction in which the robot needs to travel to reach its goal. The robot. In order to determine this direction, the robot must be aware of its position in GPS coordinates, its bearing from true north and the GPS coordinates of its destination.
 
-To obtain this information, the robot is equipped with an Android phone running the \verb|android_sensors_driver| app which publishes:
+For this assignment, the \verb|gps_drive| node performs these required calculations. In particular, the \verb|gps_drive| node subscribes to the Android device's GPS fixes and magnetic fields (published on the \verb|/phone1/android/fix| and \verb|/phone1/android/magnetic_field| topics respectively). The robot also has the option to receive real-time kinematic GPS data through \verb|/ugv_nav/rtk_fix|, providing a much more accurate position from an external GPS module in good conditions. A filter is implemented that determines whether the RTK GPS data is suitable for use by ensuring tha
 
-\begin{itemize}
-	\item Camera images: \verb|sensor_msgs/CompressedImage| and \verb|sensor_msgs/Image|
-	\item Fluid pressure data: \verb|sensor_msgs/FluidPressure|
-	\item Illuminance data: \verb|sensor_msgs/Illuminance|
-	\item Accelerometer: \verb|sensor_msgs/Imu|
-	\item Magnetic field: \verb|sensor_msgs/MagneticField|
-	\item GPS fixes: \verb|sensor_msgs/NavSatFix|
-	\item Temperature data: \verb|sensor_msgs/Temperature| \\
-\end{itemize}
+The GPS coordinates of the robot's destination are published to the  \verb|/ugv_nav/waypoints| topic by the \verb|dest_sender| node, which \verb|gps_drive| also subscribes to.
 
-For this assignment, the \verb|gps_drive| node performs these required calculations. In particular, the \verb|gps_drive| node subscribes to the Android device's GPS fixes and magnetic fields (published on the \verb|/phone1/android/fix| and \verb|/phone1/android/magnetic_field| topics respectively). The GPS coordinates of the robot's destination are published to the  \verb|/ugv_nav/waypoints| topic by the \verb|dest_sender| node, which \verb|gps_drive| also subscribes to.
-
-\pagebreak
-
+\subsubsection{Waypoint bearing calculation}
 \begin{figure}[h]
 	\centering
 	\includegraphics[scale=0.6]{figures/bearings.png}
@@ -269,8 +293,6 @@ Supposing the robot is facing True North, and if $\beta$ is the bearing of the d
 	\beta = \tan^{-1}({\frac{\Delta{longitude}}{\Delta{latitude}}})
 \end{equation}
 If $\theta$ is the angle the robot must turn to reach its destination, as in Figure \ref{figure:bearing1}, then $\theta = \beta$.
-
-\pagebreak
 
 In the cases where the robot is not facing true north, then:
 \begin{equation}
@@ -302,15 +324,18 @@ where $x$ and $y$ are magnetic field strength to the top and right edges of the 
 
 If the distance to the destination is less than 5 (i.e. the robot is within 5 metres of its destination), it is considered to have arrived at its destination. At this stage, the \verb|gps_drive| node will publish a message to the \verb|/ugv_nav/arrived| topic, signalling to the \verb|dest_sender| that the robot has reached its destination and that a new destination is required.
 
-As the robot obtains GPS fixes frequently, it is sensitive to small changes to its position. The frequent updating of the robot's GPS fix results in abrupt movement changes as the robot attempts to face the bearing to its destination. In order to reduce the amount of sudden directional changes, rather than continually looking for the most direct path to its goal, the direction the robot decides to travel is biased towards a `smooth path'.
+Because of the inaccuracies of the compass and the GPS, the vehicle may have a tendency to deviate from the straight line path between waypoints. This can result in the robot wandering off the most suitable path. To counter this, a bias toward the straight line path is added to direct the robot back on track. The bias is made proportional to the perpendicular distance from the straight line path according to the following equation:
+
+\begin{equation}
+bias = k * \text{distance\_to\_destination} * sin(\text{desired\_heading}-\text{start\_to\_dest\_heading})
+\end{equation}
+
+where \(k\) is the proportional constant, chosen to be 2, and \verb|start_to_dest_heading| is the heading from either the starting position or the last waypoint to the current destination. For example, if the position is calculated to have deviated \unit[5]{m} from the straight line path, then the robot will adjust its bearing \unit[10]{\degree} in addition to the new straight line bearing.
 
 
-TODO: Explain straight line bias calculations 
+Following these calculations, the \verb|gps_drive| node publishes the most applicable bearing (as a std\_msgs::Float32 message) for the robot to travel. The waypoint traversal module then performs the applicable actions based on this bearing.
 
-
-Once these biases have been taken into consideration, the \verb|gps_drive| node publishes the most applicable bearing (as a std\_msgs::Float32 message) for the robot to travel. The waypoint traversal module then performs the applicable actions based on this bearing.
-
-\pagebreak
+%\pagebreak
 
 \subsection{Waypoint Traversal}
 The waypoint traversal module is responsible for physically getting the robot to its destination. The \verb|gps_drive|, \verb|laser_safe| and \verb|motordata_arduino_send| nodes work in conjunction to achieve this goal.
@@ -326,7 +351,9 @@ Given a bearing to travel along, the \verb|laser_safe| node will take one of two
 	\caption{\textbf{Range of laser scanner.}}
 \end{figure}
 
-Note that for the purposes of this assignment, the robot is instructed to scan for obstacles within a 90\degree field-of-view. That is, obstacles further than 45\degree to the left or right of the centre of the robot are deemed as harmless and are ignored.
+TODO: Change diagram or clarify that 90 degrees was only for obstacle avoidance method 2
+
+Note that for the purposes of this assignment, the robot is instructed to scan for obstacles within a \unit[150]{\degree} field-of-view. That is, obstacles further than \unit[75]{\degree} to the left or right of the centre of the robot are deemed as harmless and are ignored.
 
 \textbf{First Iteration}
 
@@ -350,12 +377,14 @@ To handle the case where multiple distinct obstacles are visible, and various di
 
 \begin{enumerate}
 	\item Populate an array the length of the number of ranges in the scan range with '1' for visible obstacles within \unit[3]{m} and '0' for clear space
-	\item Widen the bearing occupied by any visible obstacles within the array according to their distance away from the robot, so that a bearing buffer equivalent of \unit[0.7]{m} on either side of the detected obstacle is occupied, using the formula in Equation \ref{equation:bearing_buffer}.
-	\item Choose the available bearing that is closest to the desired bearing calculated in Equation \ref{equation:desired_heading}.
+	\item Widen the bearing occupied by any visible obstacles within the array according to their distance away from the robot, so that a bearing buffer equivalent of \unit[0.7]{m} on either side of the detected obstacle is occupied, using the formula in \eqref{equation:bearing_buffer}.
+	\item Choose the available bearing that is closest to the desired bearing calculated in \eqref{equation:desired_heading}.
 	\begin{enumerate}
 		\item If no bearing is available, do not publish any command for movement.
 	\end{enumerate}
 \end{enumerate}
+
+Code for the algorithm can be found in \appref{appendix:obstacle_avoidance}.
 
 Additionally, if any obstacle comes within \unit[0.7]{m} of the robot, a safety stop is enacted and the robot will not move.
 
@@ -367,14 +396,14 @@ Additionally, if any obstacle comes within \unit[0.7]{m} of the robot, a safety 
 	\label{equation:bearing_buffer}
 \end{equation}
 
-
-
-
+TODO: insert figure showing latest obstacle avoidance algorithm (drawing located in figures folder)
 \subsubsection{Motor Control}
 
-TODO: motordata arduino send. 
+To convert a motion heading into motor commands, a motor behaviour transform is enacted to mimic joystick control for a differentially steered vehicle, such as an electric wheelchair.
 
-\subsection{Open Source SICK TiM Driver}
+TODO: insert motor control figure (draft is in figures folder)
+
+To direct the robot in the direction of the next waypoint according to the calculated heading dependent on bias corrections and obstacle avoidance, a proportional controller is implemented for steering. The local desired heading $\theta$ is halved and then constrained to $\pm$\unit[30]{\degree} to ensure a controlled turn regardless
 
 \pagebreak
 \section{Results}
@@ -400,11 +429,13 @@ Obstacle avoidance relies entirely on data received from the laser scanner. In a
 \pagebreak
 \section{Future Work and Improvements}
 
+
 \pagebreak
-\section{Appendix}
-
-
-\subsection{sensor\_msgs/NavSatFix.msg}
+{\huge \textbf{Appendix}}
+\appendix
+\addappheadtotoc
+\section{sensor\_msgs/NavSatFix.msg}
+\label{appendix:NavSatFix.msg}
 \begin{lstlisting}[language=C++]
 Header header
 
@@ -444,6 +475,90 @@ uint8 COVARIANCE_TYPE_KNOWN = 3
 
 uint8 position_covariance_type
 \end{lstlisting}
+\pagebreak
 
+\section{Obstacle Avoidance Function}
+\label{appendix:obstacle_avoidance}
+\begin{lstlisting}[language=C++]
+int Laser::getBestHeading(vector<float> ranges, int desired_heading_transform) const {
+	// note: no value in ranges can be less than SAFE_DISTANCE for this function to work
+	int obstacles[RANGES] = {0};
+	int best_heading = -1;
+	double angle_buffer_rad;
+	int angle_buffer_deg = 0;
+	// populate obstacles array by padding each obstacle reading on both sides
+	// first, sweep one way, right to left
+	for (int i = MIN_RANGE; i <= MAX_RANGE; ++i) {
+		if (ranges[i] != 0.0 && ranges[i] < DETECT_RANGE) {
+			angle_buffer_rad = asin(SAFE_DISTANCE/ranges[i]);
+			angle_buffer_deg = fmax(angle_buffer_deg,floor(angle_buffer_rad * 180/M_PI));
+		}
+		if(angle_buffer_deg>0){
+			obstacles[i] = 1;
+			angle_buffer_deg--;
+		}
+	}
+	// then, sweep the other way
+	angle_buffer_deg = 0;
+	for (int i = MAX_RANGE; i>=MIN_RANGE; --i) {
+		if (ranges[i] != 0.0 && ranges[i] < DETECT_RANGE) {
+			angle_buffer_rad = asin(SAFE_DISTANCE/ranges[i]);
+			angle_buffer_deg = fmax(angle_buffer_deg,floor(angle_buffer_rad * 180/M_PI));
+		}
+		if(angle_buffer_deg>0){
+			obstacles[i] = 1;
+			angle_buffer_deg--;
+		}
+	}
+	//then, get the viewable angle free of obstacles closest to desired heading
+	for (int i = MIN_RANGE,abs_diff = 1000; i <= MAX_RANGE; ++i) {
+		if (obstacles[i]==0){
+			if(fabs(i-desired_heading_transform)<abs_diff){
+				best_heading = i;
+				abs_diff = fabs(i-desired_heading_transform);
+			}
+		}
+	}
+	return best_heading;
+}
+\end{lstlisting}
+
+\section{Movement Message to Motor Control Function}
+\begin{lstlisting}[language=C++]
+void Motornav_Com::sendMovement() {
+
+	if(r_d<0.1) 
+		return;
+	// new driving maths coming from old UGV_sketch
+	if(theta_d<=M_PI_4&&theta_d>=-3*M_PI_4){
+		rightMotorSign = '+';
+	} else {
+		rightMotorSign = '-';
+	}
+	if(theta_d<=3*M_PI_4&&theta_d>=-M_PI_4){
+		leftMotorSign = '+';
+	} else {
+		leftMotorSign = '-';
+	}
+	leftMotorVal = fmin(M_PI_4,fmin(fabs(theta_d+M_PI_4), fabs(theta_d-3*M_PI_4)))*255/M_PI_4;
+	rightMotorVal = fmin(M_PI_4,fmin(fabs(theta_d+3*M_PI_4), fabs(theta_d-M_PI_4)))*255/M_PI_4;
+	
+	leftMotorVal = fmin(leftMotorVal*r_d,255);
+	rightMotorVal = fmin(rightMotorVal*r_d,255);
+	
+	char buffer[MOTORDRIVER_COMBUFFER_LENGTH+1];
+	char message[MOTORDRIVER_COMBUFFER_MSGLENGTH+1];
+	snprintf(message, MOTORDRIVER_COMBUFFER_MSGLENGTH+1, "%c%2.2X%c%2.2X", leftMotorSign, leftMotorVal, rightMotorSign, rightMotorVal);
+	unsigned char checksum = calculateChecksum(message, MOTORDRIVER_COMBUFFER_MSGLENGTH);
+	snprintf(buffer,MOTORDRIVER_COMBUFFER_LENGTH+1,"[%s:%2.2X]",message,checksum);
+	printf("%.*s\n", MOTORDRIVER_COMBUFFER_LENGTH, buffer);
+	
+	// Write these bytes to the Com Port
+	
+	//ROS_INFO_STREAM("theta " << theta_d << " mag " << r_d);
+	comPort.write(buffer, MOTORDRIVER_COMBUFFER_LENGTH);
+	comPort.flush();
+}
+\end{lstlisting}
 
 \end{document}
