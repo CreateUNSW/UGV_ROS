@@ -16,8 +16,10 @@
 \usepackage{listings}
 \usepackage{sidecap}
 \usepackage{wrapfig}
+\usepackage{picinpar}
 \usepackage{parskip}
 \usepackage{units}
+%\usepackage{tabularx}
 
 \usepackage{fancyhdr}
 \usepackage{color}
@@ -102,32 +104,20 @@ To achieve the objective, the robot is equipped with a GPS and compass (using an
 
 \subsubsection{Hardware}
 
-The Unmanned Ground Vehicle (UGV) was developed to serve as an autonomous platform for the research and testing of robotic systems. It measures \unit[1]{m} long, and weighs approximately \unit[50]{kg}. The robot was constructed using parts from an electric wheelchair and a custom-design welded steel chassis. The following hardware is contained on board:
+The key hardware elements that combine to provide sensory information, networking and control are as follows:
 
 \begin{itemize}
-	\item Dell Latitude E6400 notebook
-	\item SICK TiM551 2D laser scanner
-	\item DLink DSL 2750B N300 Modem Router
-	\item Sony Xperia Z3 compact
-	\item Arduino Mega 2560 R3
-	\item Sabertooth 2X25 regenerative motor driver
-	\item 2 x 12V lead acid battery
-	\item 2 x electric wheelchair motor
+	\item A laptop, to run the ROS core and all nodes that interpret sensory information and output control commands
+	\item A LIDAR that provides a 2D field of view of any nearby obstacles
+	\item A phone that provides GPS and compass data
+	\item A motor controller system and motors that drive the robot
 \end{itemize}
 
-The Dell notebook was installed with Ubuntu 14.04 (a.k.a. "Trusty Tahr") and ROS Indigo. Sensors from the phone and laser scanner were integrated in a Local Area Network through a combination of Ethernet and wireless connections. A VPN was installed for remote communication over the internet between networked devices, including a precise positioning GPS device developed for an undergraduate thesis.
 
-\begin{figure}[h!]
-	\centering
-	\includegraphics[scale=0.6]{figures/hardware_chart.png}
-	\caption{Hardware map of UGV}
-	\label{figure:hardware_chart}
-\end{figure}
-\pagebreak
 
 \subsubsection{Software}
 
-On the software side, five/six(?????) nodes run in conjunction to operate the robot:
+On the software side, six nodes run in conjunction to operate the robot:
 
 \verb|dest_sender| keeps track of the robot's remaining waypoints.
 
@@ -144,6 +134,78 @@ On the software side, five/six(?????) nodes run in conjunction to operate the ro
 \pagebreak
 \section{Hardware}
 
+\subsection{Mechanical Structure}
+The Unmanned Ground Vehicle (UGV) was developed to serve as an autonomous platform for the research and testing of robotic systems. It measures \unit[1]{m} long, \unit[0.5]{m} wide, and weighs approximately \unit[50]{kg}. The robot was constructed using parts from an electric wheelchair and a custom-design welded steel chassis, as shown in Figure \ref{figure:ugv_chassis}.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.6]{figures/UGV.png}
+	\caption{CAD model of chassis of UGV}
+	\label{figure:ugv_chassis}
+\end{figure}
+
+\subsection{Integration}
+
+The following hardware is contained on board:
+
+\begin{itemize}
+	\item Dell Latitude E6400 notebook
+	\item SICK TiM551 2D laser scanner
+	\item DLink DSL 2750B N300 Modem Router
+	\item Sony Xperia Z3 compact
+	\item Arduino Mega 2560 R3
+	\item Sabertooth 2X25 regenerative motor driver
+	\item 2 x 12V lead acid battery
+	\item 2 x electric wheelchair motor
+\end{itemize}
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[scale=0.6]{figures/hardware_chart.png}
+	\caption{Hardware map of UGV}
+	\label{figure:hardware_chart}
+\end{figure}
+%\pagebreak
+
+The Dell notebook is installed with Ubuntu 14.04 (a.k.a. "Trusty Tahr") and ROS Indigo. Sensors from the phone and laser scanner are integrated in a Local Area Network through a combination of Ethernet and wireless connections. A VPN is installed for remote communication over the internet between networked devices, including a precise positioning GPS device developed for an undergraduate thesis. \unit[24]{V} power from the two lead acid batteries is supplied to the motor driver to power the DC geared motors and integrated solenoid brakes. \unit[12]{V} from one of the batteries is segmented to provide a separate power source for the laser scanner and the router.
+
+\subsection{Hardware specifications}
+\subsubsection{SICK TiM551 2D Laser Scanner}
+
+
+%\begin{table}[h!]
+%	\caption{SICK TiM551 Specifications}
+%	\label{table:spec}
+%	\begin{tabular}{|c|c|}
+%		\hline
+%		Aperture angle & \unit[270]{\degree}\\
+%		Scanning frequency & \unit[15]{Hz}\\
+%		Angular resolution & \unit[1]{\degree}\\
+%		Operating range & \unit[0.05-10]{m}\\
+%		\hline
+%	\end{tabular}
+%\end{table}
+
+
+The 2D laser scanner is rated outdoor IP67, allowing for use in a variety of weather conditions including bright sunlight. The sensor provides readings up to a maximum range of \unit[10]{m}, giving enough perspective to traverse routes in terrain with complex and even dynamic obstacles. The following specifications detail the capabilities of the sensor: 
+
+\begin{itemize}
+	\item Aperture angle: \unit[270]{\degree}
+	\item Scanning frequency: \unit[15]{Hz}
+	\item Angular resolution: \unit[1]{\degree}
+	\item Operating range: \unit[0.05-10]{m}
+	\item Operating voltage: \unit[9-28]{V} DC
+	\item Power consumption: \unit[3]{W}
+\end{itemize}
+\begin{figure}[h!]
+	\centering
+	
+	\includegraphics[scale=0.2]{figures/sick_lidar.png}
+	\caption{SICK TiM551 2D Laser Scanner}
+	\label{figure:sick_lidar}
+\end{figure}
+
+The device is mounted in a static location on the front of the UGV in the horizontal plane approximately \unit[300]{mm} above ground level. In this position, the view is partially obscured to the sides and behind the laser scanner by the UGV chassis, and therefore the view is limited to a \unit[150]{\degree} sweep to the front of the robot.
 \pagebreak
 \section{Software}
 
@@ -151,7 +213,7 @@ Three main modules run in conjunction to govern the UGV: planner, localisation a
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[scale=0.255]{rqt.png}
+	\includegraphics[scale=0.255]{figures/rqt.png}
 	\caption{\textbf{Rqt graph.}}
 \end{figure}
 
@@ -185,7 +247,7 @@ For this assignment, the \verb|gps_drive| node performs these required calculati
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[scale=0.6]{bearings.png}
+	\includegraphics[scale=0.6]{figures/bearings.png}
 	\caption{\textbf{Calculation of the bearing of the destination from the robot, if the robot is facing true north.}}
 \end{figure}
 
@@ -216,7 +278,7 @@ and $\Delta{x}$ and $\Delta{y}$ are given from the Android device's magnetic fie
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[scale=0.6]{bearingsOffset.png}
+	\includegraphics[scale=0.6]{figures/bearingsOffset.png}
 	\caption{\textbf{Calculation of the bearing of the destination from the robot where the robot is not facing true north. NOTE: In this example, $\alpha$ is positive and $\beta$ is negative.}}
 \end{figure}
 
@@ -253,7 +315,7 @@ Given a bearing to travel along, the \verb|laser_safe| node will take one of two
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[scale=0.34]{laser.png}
+	\includegraphics[scale=0.34]{figures/laser.png}
 	\caption{\textbf{Range of laser scanner.}}
 \end{figure}
 
@@ -269,7 +331,7 @@ The second iteration of obstacle avoidance attempts to drive around obstacles as
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[scale=0.17]{obstacle2.png}
+	\includegraphics[scale=0.17]{figures/obstacle2.png}
 	\caption{\textbf{Obstacle avoidance paths.}}
 \end{figure}
 
