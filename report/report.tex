@@ -205,7 +205,7 @@ During operation, camera streaming is not enabled to ensure there is enough band
 
 \subsubsection{RTK GPS Module}
 
-TODO: I need to fill this section
+A specialised GPS device (shown in \figref{figure:RTK_GPS_device}) is mounted on the UGV for precise positioning. It consists of an antenna with inbuilt raw receiver, and an Odroid U3 with a 3G dongle. The open source software computes centimetre-accurate positions at \unit[2]{Hz} and is configured to output solutions over TCP connection through the VPN. The latitude and longitude solutions are then received and published as a \verb|NavSatFix.msg| by \verb|rtk_gps_pub|.
 
 \begin{figure}[h]
 	\centering
@@ -252,7 +252,7 @@ The following hardware is contained on board:
 
 The Dell notebook is installed with Ubuntu 14.04 (a.k.a. "Trusty Tahr") and ROS Indigo. Sensors from the phone and laser scanner are integrated in a Local Area Network through a combination of Ethernet and wireless connections. A VPN is installed for remote communication over the internet between networked devices, including a precise positioning GPS device developed for an undergraduate thesis. \unit[24]{V} power from the two lead acid batteries is supplied to the motor driver to power the DC geared motors and integrated solenoid brakes. \unit[12]{V} from one of the batteries is segmented to provide a separate power source for the laser scanner and the router.
 
-Note: this hardware configuration was not set up prior to undertaking this assignment (excluding the chassis, motors and motor driver); all hardware development and integration was conducted as part of the project.
+\textbf{Note:} this hardware configuration was not set up prior to undertaking this assignment (excluding the chassis, motors and motor driver); all hardware development and integration was conducted as part of the project.
 
 \pagebreak
 \section{Software}
@@ -279,7 +279,7 @@ The \verb|dest_sender| node parses a file containing the GPS coordinates of wayp
 \subsubsection{UGV position and heading determination}
 The localisation module is responsible for determining the direction in which the robot needs to travel to reach its goal. The robot. In order to determine this direction, the robot must be aware of its position in GPS coordinates, its bearing from true north and the GPS coordinates of its destination.
 
-For this assignment, the \verb|gps_drive| node performs these required calculations. In particular, the \verb|gps_drive| node subscribes to the Android device's GPS fixes and magnetic fields (published on the \verb|/phone1/android/fix| and \verb|/phone1/android/magnetic_field| topics respectively). The robot also has the option to receive real-time kinematic GPS data through \verb|/ugv_nav/rtk_fix|, providing a much more accurate position from an external GPS module in good conditions. A filter is implemented that determines whether the RTK GPS data is suitable for use by ensuring tha
+For this assignment, the \verb|gps_drive| node performs these required calculations. In particular, the \verb|gps_drive| node subscribes to the Android device's GPS fixes and magnetic fields (published on the \verb|/phone1/android/fix| and \verb|/phone1/android/magnetic_field| topics respectively). The robot also has the option to receive real-time kinematic GPS data through \verb|/ugv_nav/rtk_fix|, providing a much more accurate position from an external GPS module in good conditions. A filter is implemented that determines whether the RTK GPS data is suitable for use by ensuring that the five latest readings (2.5 seconds of data) are within an acceptable area. If the RTK GPS does not have a good fix solution, the positioning calculations revert to using the phone GPS.
 
 The GPS coordinates of the robot's destination are published to the  \verb|/ugv_nav/waypoints| topic by the \verb|dest_sender| node, which \verb|gps_drive| also subscribes to.
 
