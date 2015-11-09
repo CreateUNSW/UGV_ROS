@@ -82,7 +82,7 @@
         \vspace{5cm}
 
 	\large
-	Nathan ADLER\\
+	Nathan ADLER z3327870\\
 	Aneita YANG\\
 
 	\vfill
@@ -205,7 +205,7 @@ During operation, camera streaming is not enabled to ensure there is enough band
 
 \subsubsection{RTK GPS Module}
 
-TODO: I need to fill this section
+A specialised GPS device (shown in \figref{figure:RTK_GPS_device}) is mounted on the UGV for precise positioning. It consists of an antenna with inbuilt raw receiver, and an Odroid U3 with a 3G dongle. The open source software computes centimetre-accurate positions at \unit[2]{Hz} and is configured to output solutions over TCP connection through the VPN. The latitude and longitude solutions are then received and published as a \verb|NavSatFix.msg| by \verb|rtk_gps_pub|.
 
 \begin{figure}[h]
 	\centering
@@ -252,7 +252,7 @@ The following hardware is contained on board:
 
 The Dell notebook is installed with Ubuntu 14.04 (a.k.a. "Trusty Tahr") and ROS Indigo. Sensors from the phone and laser scanner are integrated in a Local Area Network through a combination of Ethernet and wireless connections. A VPN is installed for remote communication over the internet between networked devices, including a precise positioning GPS device developed for an undergraduate thesis. \unit[24]{V} power from the two lead acid batteries is supplied to the motor driver to power the DC geared motors and integrated solenoid brakes. \unit[12]{V} from one of the batteries is segmented to provide a separate power source for the laser scanner and the router.
 
-Note: this hardware configuration was not set up prior to undertaking this assignment (excluding the chassis, motors and motor driver); all hardware development and integration was conducted as part of the project.
+\textbf{Note:} this hardware configuration was not set up prior to undertaking this assignment (excluding the chassis, motors and motor driver); all hardware development and integration was conducted as part of the project.
 
 \pagebreak
 \section{Software}
@@ -279,7 +279,7 @@ The \verb|dest_sender| node parses a file containing the GPS coordinates of wayp
 \subsubsection{UGV position and heading determination}
 The localisation module is responsible for determining the direction in which the robot needs to travel to reach its goal. The robot. In order to determine this direction, the robot must be aware of its position in GPS coordinates, its bearing from true north and the GPS coordinates of its destination.
 
-For this assignment, the \verb|gps_drive| node performs these required calculations. In particular, the \verb|gps_drive| node subscribes to the Android device's GPS fixes and magnetic fields (published on the \verb|/phone1/android/fix| and \verb|/phone1/android/magnetic_field| topics respectively). The robot also has the option to receive real-time kinematic GPS data through \verb|/ugv_nav/rtk_fix|, providing a much more accurate position from an external GPS module in good conditions. A filter is implemented that determines whether the RTK GPS data is suitable for use by ensuring tha
+For this assignment, the \verb|gps_drive| node performs these required calculations. In particular, the \verb|gps_drive| node subscribes to the Android device's GPS fixes and magnetic fields (published on the \verb|/phone1/android/fix| and \verb|/phone1/android/magnetic_field| topics respectively). The robot also has the option to receive real-time kinematic GPS data through \verb|/ugv_nav/rtk_fix|, providing a much more accurate position from an external GPS module in good conditions. A filter is implemented that determines whether the RTK GPS data is suitable for use by ensuring that the five latest readings (2.5 seconds of data) are within an acceptable area. If the RTK GPS does not have a good fix solution, the positioning calculations revert to using the phone GPS.
 
 The GPS coordinates of the robot's destination are published to the  \verb|/ugv_nav/waypoints| topic by the \verb|dest_sender| node, which \verb|gps_drive| also subscribes to.
 
@@ -421,38 +421,34 @@ For testing, the magnitude of the speed control was fixed at 70\%. When traversi
 \pagebreak
 \section{Results}
 
-TODO: make the results detail what it successfully did so it looks more impressive.
+For testing, the \verb|gps_config| file was loaded with a series of 10 waypoint coordinates starting on the lower campus main walkway of UNSW outside the Tyree Energy Technologies building, finishing at the bottom of the Scientia building. The robot then was allowed to drive autonomously as it attempted to complete the journey between the two points. The robot successfully navigated to its destination and then returned, although required some assistance in certain situations.
 
 The demonstration for the assignment performed well in large open areas with no tall surrounding objects. The main causes for incorrect behaviour were poor GPS fixes, blind spots in the laser scanner and interference with the laser scanner. \\
 
 \textbf{Inaccurate GPS Fixes}
 
-Waypoint traversal relies heavily on the robot being able to pinpoint its precise position. In sheltered areas, or areas with tall buildings or trees, GPS fixes can be inaccurate. Such inaccuracies impact on the accuracy of the calculations performed. The bearing of the destination from the robot's position can be incorrect. The distance the robot must drive before reaching its destination can also be wrong. 
-
-When working with unmanned vehicles, it is particularly important that these calculations are precise and accurate. \\
+Waypoint traversal relies heavily on the robot being able to pinpoint its precise position. In sheltered areas, or areas with tall buildings or trees, GPS fixes can be inaccurate. Such inaccuracies impact on the accuracy of the calculations performed. The bearing of the destination from the robot's position can be incorrect. The distance the robot must drive before reaching its destination can also be wrong. When working with unmanned vehicles, it is particularly important that these calculations are precise and accurate. In circumstances where the robot had a precise RTK GPS fix solution, mainly in areas not in proximity to tall buildings on multiple sides, the driving of the robot was significantly improved.\\
 
 \textbf{Laser Scanner Blind Spots}
 
-The laser scanner is positioned on the front of the robot, on its base. Sitting at a height of 20cm above the ground, the laser scanner scans on a level plane. Obstacles shorter than 20cm, that lie outside of the laser's view, are essentially driven over or driven through. 
-
-In the case of the demonstration, the robot drove into a brick wall which was just below the laser scanner's view. \\
+The laser scanner is positioned on the front of the robot, on its base. Sitting at a height of \unit[30]{cm} above the ground, the laser scanner scans on a level plane. Obstacles shorter than \unit[30]{cm}, that lie outside of the laser's view, are essentially driven over or driven through. During the demonstration, the robot drove into a brick wall which was just below the laser scanner's view. The robot was also sometimes confused when variations in the gradient of the ground saw it to believe that obstacles were nearby, such as on grassed areas where the laser scanner would detect the grass. The laser scanner's limited view also meant that care had to be taken when the robot was undergoing sharp turns, and this limited its range of motion.\\
 
 \textbf{Laser Scanner Interference}
 
-Obstacle avoidance relies entirely on data received from the laser scanner. In areas with reflective surfaces (e.g. mirrors and glass), the reflection interferes with the laser, causing the robot to think there are obstacles even when the path is clear.
+Obstacle avoidance relies entirely on data received from the laser scanner. In areas with reflective surfaces (e.g. mirrors and glass), the reflection interferes with the laser, causing the robot to think there are obstacles even when the path is clear. This caused the robot to think that certain paths were blocked and try to go around non-existent obstacles. A fix was attempted that involved filtering out detected obstacles the size of only one point, which somewhat improved navigation.
 
 \pagebreak
-\section{Conclusion?}
-
 \section{Future Work and Improvements}
-TODO: Make this look better
+
+A number of improvements are possible in future revisions of the software on the UGV to enhance navigation capabilities and increase its potential as a platform for research and development. These include:
+
 \begin{itemize}
-	\item Add depth sensor on front such as Kinect to sense ledges and different terrain
-	\item Add odometry to better track the movement of the robot
-	\item Implement an EKF with the odometry to improve errors in positioning
-	\item Add a sensor on the rear to allow for autonomous reversing
-	\item Implement map-based localisation and navigation for better path planning
-	\item Extend navigation into indoor environments and manage transition between outdoor and indoor settings
+	\item Adding a depth sensor on front such as Kinect to sense ledges and different terrain.
+	\item Adding odometry to better track the movement of the robot.
+	\item Implementing an EKF with the odometry to improve errors in positioning.
+	\item Adding a sensor on the rear to allow for autonomous reversing.
+	\item Implementing map-based localisation and navigation for better path planning.
+	\item Extending navigation into indoor environments and manage transition between outdoor and indoor settings.
 \end{itemize}
 
 \pagebreak
