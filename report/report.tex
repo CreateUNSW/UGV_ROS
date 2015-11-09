@@ -98,9 +98,9 @@
 
 \pagebreak
 \section{Introduction}
-In this assignment, both the hardware and software aspects of robotics are explored. The overall objective was to create a robot that could navigate autonomously in an outdoor environment, whilst avoiding any obstacles. An existing ground vehicle platform developed by student society CREATE UNSW was used as a base for testing.
+In this assignment, both the hardware and software aspects of robotics are explored. The overall objective was to create a robot that could navigate autonomously in an outdoor environment, whilst avoiding any obstacles. An existing ground vehicle platform, developed by student society CREATE UNSW, was used as a base for testing.
 
-To achieve the objective, the robot is equipped with a GPS and compass (using an Android phone with ROS). A laser scanner is also attached to the front of the robot, gathering information about the robot's immediate surroundings.
+To achieve the objective, the robot is equipped with a GPS and compass (using an Android phone running ROS). A laser scanner is also attached to the front of the robot, gathering information about the robot's immediate surroundings.
 
 \subsection{Modules}
 
@@ -126,11 +126,11 @@ On the software side, six nodes run in conjunction to operate the robot:
 
 \verb|gps_drive| calculates and publishes the direction in which the robot needs to travel to reach its destination.
 
-\verb|rtk_gps_pub| publishes the an optional precise position based on real time kinematic GPS solutions with centimetre-level accuracy.
+\verb|rtk_gps_pub| publishes an optional precise position based on realtime kinematic GPS solutions with centimetre-level accuracy.
 
 \verb|laser_safe| publishes movement messages, either directly to the bot's destination, or to avoid an obstacle.
 
-\verb|motordata_arduino_send| converts movement messages into serial messages to send to the Arduino that controls the motord driver and drives the robot.
+\verb|motordata_arduino_send| converts movement messages into serial messages to send to the Arduino that controls the motor driver. This node is what drives the robot.
 
 \verb|sick_tim| reads data from the SICK TiM551 2D laser scanner and publishes the data as a \verb|laser_scan| ROS message.
 
@@ -138,12 +138,12 @@ On the software side, six nodes run in conjunction to operate the robot:
 \section{Hardware}
 
 \subsection{Mechanical Structure}
-The Unmanned Ground Vehicle (UGV) was developed to serve as an autonomous platform for the research and testing of robotic systems. It measures \unit[1]{m} long, \unit[0.5]{m} wide, and when fully loaded weighs approximately \unit[50]{kg}. The robot was constructed using parts from an electric wheelchair and a custom-design welded steel chassis, as shown in Figure \ref{figure:ugv_chassis}.
+The Unmanned Ground Vehicle (UGV) was developed to serve as an autonomous platform for the research and testing of robotic systems. It measures \unit[1]{metre} long, \unit[0.5]{metres} wide and, when fully loaded, weighs approximately \unit[50]{kg}. The robot was constructed using parts from an electric wheelchair and a custom-design welded steel chassis, as shown in Figure \ref{figure:ugv_chassis}.
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[scale=0.6]{figures/UGV.png}
-	\caption{\textbf{CAD model of chassis of UGV}}
+	\includegraphics[scale=0.5]{figures/UGV.png}
+	\caption{CAD model of chassis of UGV}
 	\label{figure:ugv_chassis}
 \end{figure}
 
@@ -175,6 +175,7 @@ The 2D laser scanner (shown in \figref{figure:sick_lidar}) is rated outdoor IP67
 	\item Operating voltage: \unit[9-28]{V} DC
 	\item Power consumption: \unit[3]{W}
 \end{itemize}
+
 \begin{figure}[h!]
 	\centering
 	
@@ -183,7 +184,7 @@ The 2D laser scanner (shown in \figref{figure:sick_lidar}) is rated outdoor IP67
 	\label{figure:sick_lidar}
 \end{figure}
 
-The device is mounted in a static location on the front of the UGV in the horizontal plane approximately \unit[300]{mm} above ground level. In this position, the view is partially obscured to the sides and behind the laser scanner by the UGV chassis, and therefore the view is limited to a \unit[150]{\degree} sweep to the front of the robot in software.
+The device is mounted in a static location on the front of the UGV in the horizontal plane approximately \unit[300]{mm} above ground level. In this position, the view is partially obscured to the sides and behind the laser scanner by the UGV chassis and, therefore, the view is limited to a \unit[150]{\degree} sweep to the front of the robot in software.
 
 To obtain data from the laser scanner, the open source \verb|sick_tim| ROS package is used. The package provides a launch file \verb|sick_tim551_2050001.launch|, which reads range data into a \verb|sensor_msgs/LaserScan.msg| that is published every scan frame.
 
@@ -201,11 +202,11 @@ The robot is equipped with an Android phone running the \verb|android_sensors_dr
 	\item Temperature data: \verb|sensor_msgs/Temperature| \\
 \end{itemize}
 
-During operation, camera streaming is not enabled to ensure there is enough bandwidth and processing available for proper operation of all software modules. The GPS receiver is able to use American GPS and Russian GLONASS satellites, and provides a "fix" solution at a rate of \unit[1]{Hz}. The fix solution is formatted as a \verb|sensor_msgs/NavSatFix.msg| (see \appref{appendix:NavSatFix.msg}) All other sensor data is published at a rate of \unit[20]{Hz}.
+During operation, camera streaming is not enabled to ensure there is enough bandwidth and processing available for proper operation of all software modules. The GPS receiver is able to use American GPS and Russian GLONASS satellites, and provides a ``fix" solution at a rate of \unit[1]{Hz}. The fix solution is formatted as a \verb|sensor_msgs/NavSatFix.msg| (see \appref{appendix:NavSatFix.msg}) All other sensor data is published at a rate of \unit[20]{Hz}.
 
 \subsubsection{RTK GPS Module}
 
-A specialised GPS device (shown in \figref{figure:RTK_GPS_device}) is mounted on the UGV for precise positioning. It consists of an antenna with inbuilt raw receiver, and an Odroid U3 with a 3G dongle. The open source software computes centimetre-accurate positions at \unit[2]{Hz} and is configured to output solutions over TCP connection through the VPN. The latitude and longitude solutions are then received and published as a \verb|NavSatFix.msg| by \verb|rtk_gps_pub|.
+A specialised GPS device (shown in \figref{figure:RTK_GPS_device}) is mounted on the UGV for precise positioning. It consists of an antenna with an inbuilt raw receiver, and an Odroid U3 with a 3G dongle. The open source software computes centimetre-accurate positions at \unit[2]{Hz} and is configured to output solutions over TCP connection through the VPN. The latitude and longitude solutions are then received and published as a \verb|NavSatFix.msg| by \verb|rtk_gps_pub|.
 
 \begin{figure}[h]
 	\centering
@@ -217,7 +218,7 @@ A specialised GPS device (shown in \figref{figure:RTK_GPS_device}) is mounted on
 \subsubsection{Arduino and Motor Driver}
 \label{motor_driver_explanation}
 
-The dual-channel motor driver converts a pulsed signal to pulse-width modulated (PWM) output to drive the motors in either direction. The pulse range from control ranges from \unit[1000-2000]{$\upmu$s}, where 1500 is off, 2000 is full forward and 1000 is full reverse. The pulse signals are generated by the Arduino Mega 2560 microcontroller, which is connected via USB to the laptop. The microcontroller is programmed to receive messages in a custom format as follows:
+The dual-channel motor driver converts a pulsed signal to pulse-width modulated (PWM) output to drive the motors in either direction. The pulse ranges from control ranges from \unit[1000-2000]{$\upmu$s}, where 1500 is off, 2000 is full forward and 1000 is full reverse. The pulse signals are generated by the Arduino Mega 2560 microcontroller, which is connected to the laptop via USB.. The microcontroller is programmed to receive messages in a custom format as follows:
 
 \begin{center}
 	[SAADBB:CC]
@@ -226,6 +227,9 @@ The dual-channel motor driver converts a pulsed signal to pulse-width modulated 
 where S is direction of bridge A, either '+' or '-', AA is the PWM of bridge A, from 00 to FF, D is direction of bridge B, either '+' or '-', BB is the PWM of bridge B, also from 00 to FF, and CC is the checksum of the command. The Arduino then scales and converts the command into the appropriate pulse signal timing to output to the dual-channel motor driver.
 
 The Arduino program also includes motor controls that smooth changes in speed and direction to avoid damaging the motors, and a watchdog timer that stops the motors if no new command has been received for \unit[500]{ms}.
+
+
+\pagebreak
 
 
 \subsection{Integration}
@@ -275,9 +279,9 @@ The \verb|dest_sender| node parses a file containing the GPS coordinates of wayp
 \subsection{Localisation}
 
 \subsubsection{UGV position and heading determination}
-The localisation module is responsible for determining the direction in which the robot needs to travel to reach its goal. The robot. In order to determine this direction, the robot must be aware of its position in GPS coordinates, its bearing from true north and the GPS coordinates of its destination.
+The localisation module is responsible for determining the direction in which the robot needs to travel to reach its goal. In order to determine this direction, the robot must be aware of its position in GPS coordinates, its bearing from true north and the GPS coordinates of its destination.
 
-For this assignment, the \verb|gps_drive| node performs these required calculations. In particular, the \verb|gps_drive| node subscribes to the Android device's GPS fixes and magnetic fields (published on the \verb|/phone1/android/fix| and \verb|/phone1/android/magnetic_field| topics respectively). The robot also has the option to receive real-time kinematic GPS data through \verb|/ugv_nav/rtk_fix|, providing a much more accurate position from an external GPS module in good conditions. A filter is implemented that determines whether the RTK GPS data is suitable for use by ensuring that the five latest readings (2.5 seconds of data) are within an acceptable area. If the RTK GPS does not have a good fix solution, the positioning calculations revert to using the phone GPS.
+For this assignment, the \verb|gps_drive| node performs these required calculations. In particular, the \verb|gps_drive| node subscribes to the Android device's GPS fixes and magnetic fields (published on the \verb|/phone1/android/fix| and \verb|/phone1/android/magnetic_field| topics respectively). The robot also has the option to receive real-time kinematic GPS data through \verb|/ugv_nav/rtk_fix|, providing a more accurate position from an external GPS module in good conditions. A filter is implemented that determines whether the RTK GPS data is suitable for use by ensuring that the five latest readings (2.5 seconds of data) are within an acceptable area. If the RTK GPS does not have a good fix solution, the positioning calculations revert to using the phone GPS.
 
 The GPS coordinates of the robot's destination are published to the  \verb|/ugv_nav/waypoints| topic by the \verb|dest_sender| node, which \verb|gps_drive| also subscribes to.
 
@@ -328,7 +332,7 @@ where $x$ and $y$ are magnetic field strength to the top and right edges of the 
 \text{Since at the latitude of Sydney, one degree of latitude is approximately \unit[111]{km}:}
 
 \begin{equation}
-	\text{distance\_to\_destination} = 111000\sqrt{\text{difference\_lat}^2+ \text{difference\_long}^2}
+	\text{distance\_to\_destination} = 111000 \cdot \sqrt{\text{difference\_lat}^2+ \text{difference\_long}^2}
 \end{equation}
 
 If the distance to the destination is less than 5 (i.e. the robot is within 5 metres of its destination), it is considered to have arrived at its destination. At this stage, the \verb|gps_drive| node will publish a message to the \verb|/ugv_nav/arrived| topic, signalling to the \verb|dest_sender| that the robot has reached its destination and that a new destination is required.
@@ -344,7 +348,6 @@ where \(k\) is the proportional constant, chosen to be 2, and \verb|start_to_des
 
 Following these calculations, the \verb|gps_drive| node publishes the most applicable bearing (as a std\_msgs::Float32 message) for the robot to travel. The waypoint traversal module then performs the applicable actions based on this bearing.
 
-%\pagebreak
 
 \subsection{Waypoint Traversal}
 The waypoint traversal module is responsible for physically getting the robot to its destination. The \verb|gps_drive|, \verb|laser_safe| and \verb|motordata_arduino_send| nodes work in conjunction to achieve this goal.
@@ -381,15 +384,12 @@ Once the robot is clear of all obstacles, it resumes driving towards its destina
 
 \textbf{Final Iteration}
 
-To handle the case where multiple distinct obstacles are visible, and various distances away need to be taken into account with the width of the robot to provide a safe bearing, the previous obstacle avoidance method is improved by finding the best available heading that is passable. The algorithm undergoes the following steps:
+To handle cases where multiple distinct obstacles are visible, the distance of obstacles needs to be taken into account. The previous obstacle avoidance method is improved by finding the best available heading that is passable, and the width of the robot provides a safe bearing for the robot to travel. The algorithm undergoes the following steps:
 
 \begin{enumerate}
 	\item Populate an array the length of the number of ranges in the scan range with '1' for visible obstacles within \unit[3]{m} and '0' for clear space
 	\item Widen the bearing occupied by any visible obstacles within the array according to their distance away from the robot, so that a bearing buffer equivalent of \unit[0.7]{m} on either side of the detected obstacle is occupied, using the formula in \eqref{equation:bearing_buffer}.
-	\item Choose the available bearing that is closest to the desired bearing calculated in \eqref{equation:desired_heading}.
-	\begin{itemize}
-		\item If no bearing is available, do not publish any command for movement.
-	\end{itemize}
+	\item Choose the available bearing that is closest to the desired bearing calculated in \eqref{equation:desired_heading}. If no bearing is available, do not publish any command for movement.
 \end{enumerate}
 
 This process is shown in \figref{figure:obstacle_avoidance_final}. Code for the algorithm can be found in \appref{appendix:obstacle_avoidance}.
