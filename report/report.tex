@@ -265,8 +265,6 @@ Three main modules run in conjunction to govern the UGV: planner, localisation a
 	\caption{\textbf{Rqt graph.}}
 \end{figure}
 
-TODO: Add RTK GPS module sending ugv\_nav/rtk\_fix into gps\_drive.
-
 \subsection{Planner}
 The planner module is responsible for keeping track of the robot's waypoints and informs the robot of its next destination. 
 
@@ -359,10 +357,8 @@ Given a bearing to travel along, the \verb|laser_safe| node will take one of two
 \begin{figure}[h]
 	\centering
 	\includegraphics[scale=0.34]{figures/laser.png}
-	\caption{\textbf{Range of laser scanner.}}
+	\caption{\textbf{Range of laser scanner for Iterations 1 and 2.}}
 \end{figure}
-
-TODO: Change diagram or clarify that 90 degrees was only for obstacle avoidance method 2
 
 Note that for the purposes of this assignment, the robot is instructed to scan for obstacles within a \unit[150]{\degree} field-of-view. That is, obstacles further than \unit[75]{\degree} to the left or right of the centre of the robot are deemed as harmless and are ignored.
 
@@ -372,15 +368,16 @@ The first iteration of obstacle avoidance involves bringing the robot to a compl
 
 \textbf{Second Iteration}
 
-The second iteration of obstacle avoidance attempts to drive around obstacles as they enter the danger zone (i.e. 45\degree left and right of the centre of the robot, within \unit[2]{m}). The robot does this by picking the closest `safe' spot to the left of the first obstacle, if possible, and drives towards it. In cases where the obstacle cuts out of the left-hand side of the laser's frame, the closest `safe' spot to the right is chosen. 
-
 \begin{figure}[h]
 	\centering
 	\includegraphics[scale=0.17]{figures/obstacle2.png}
-	\caption{\textbf{Obstacle avoidance paths.}}
+	\caption{\textbf{Obstacle avoidance paths for Iteration 2.}}
 \end{figure}
 
+The second iteration of obstacle avoidance attempts to drive around obstacles as they enter the danger zone (i.e. 45\degree left and right of the centre of the robot, within \unit[2]{m}). The robot does this by picking the closest `safe' spot to the left of the first obstacle, if possible, and drives towards it. In cases where the obstacle cuts out of the left-hand side of the laser's frame, the closest `safe' spot to the right is chosen. 
+
 Once the robot is clear of all obstacles, it resumes driving towards its destination. \\
+
 
 \textbf{Final Iteration}
 
@@ -407,12 +404,21 @@ Additionally, if any obstacle comes within \unit[0.7]{m} of the robot, a safety 
 	\label{equation:bearing_buffer}
 \end{equation}
 
-TODO: insert figure showing latest obstacle avoidance algorithm (drawing located in figures folder)
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.25]{figures/finalObstacle.png}
+	\caption{\textbf{Obstacle avoidance for Final Iteration.}}
+\end{figure}
+
 \subsubsection{Motor Control}
 
 To convert a motion heading into motor commands, a motor behaviour transform is enacted to mimic joystick control for a differentially steered vehicle, such as an electric wheelchair. The function responsible for carrying out this transformation is recorded in \appref{appendix:motor_controller}
 
-TODO: insert motor control figure (draft is in figures folder)
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.25]{figures/motors.png}
+	\caption{\textbf{Motor controls.}}
+\end{figure}
 
 To direct the robot in the direction of the next waypoint according to the calculated heading dependent on bias corrections and obstacle avoidance, a proportional controller is implemented for steering. The local desired heading $\theta$ is halved and then constrained to $\pm$\unit[30]{\degree} to ensure a controlled turn regardless of the difference between the current and desired heading. This guarantees the robot does not drive backwards or carry out a sharp pivot which would risk the robot crashing into obstacles it cannot see. At the same time, the proportional controller allows for subtle changes in direction through varying power to the motors that differentially steer the robot. As the current location and desired heading of the robot are updated at regular intervals, the steering heading of the robot will gradually adjust accordingly.
 
