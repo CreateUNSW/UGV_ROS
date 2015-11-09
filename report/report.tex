@@ -82,7 +82,7 @@
         \vspace{5cm}
 
 	\large
-	Nathan ADLER\\
+	Nathan ADLER z3327870\\
 	Aneita YANG\\
 
 	\vfill
@@ -421,38 +421,34 @@ For testing, the magnitude of the speed control was fixed at 70\%. When traversi
 \pagebreak
 \section{Results}
 
-TODO: make the results detail what it successfully did so it looks more impressive.
+For testing, the \verb|gps_config| file was loaded with a series of 10 waypoint coordinates starting on the lower campus main walkway of UNSW outside the Tyree Energy Technologies building, finishing at the bottom of the Scientia building. The robot then was allowed to drive autonomously as it attempted to complete the journey between the two points. The robot successfully navigated to its destination and then returned, although required some assistance in certain situations.
 
 The demonstration for the assignment performed well in large open areas with no tall surrounding objects. The main causes for incorrect behaviour were poor GPS fixes, blind spots in the laser scanner and interference with the laser scanner. \\
 
 \textbf{Inaccurate GPS Fixes}
 
-Waypoint traversal relies heavily on the robot being able to pinpoint its precise position. In sheltered areas, or areas with tall buildings or trees, GPS fixes can be inaccurate. Such inaccuracies impact on the accuracy of the calculations performed. The bearing of the destination from the robot's position can be incorrect. The distance the robot must drive before reaching its destination can also be wrong. 
-
-When working with unmanned vehicles, it is particularly important that these calculations are precise and accurate. \\
+Waypoint traversal relies heavily on the robot being able to pinpoint its precise position. In sheltered areas, or areas with tall buildings or trees, GPS fixes can be inaccurate. Such inaccuracies impact on the accuracy of the calculations performed. The bearing of the destination from the robot's position can be incorrect. The distance the robot must drive before reaching its destination can also be wrong. When working with unmanned vehicles, it is particularly important that these calculations are precise and accurate. In circumstances where the robot had a precise RTK GPS fix solution, mainly in areas not in proximity to tall buildings on multiple sides, the driving of the robot was significantly improved.\\
 
 \textbf{Laser Scanner Blind Spots}
 
-The laser scanner is positioned on the front of the robot, on its base. Sitting at a height of 20cm above the ground, the laser scanner scans on a level plane. Obstacles shorter than 20cm, that lie outside of the laser's view, are essentially driven over or driven through. 
-
-In the case of the demonstration, the robot drove into a brick wall which was just below the laser scanner's view. \\
+The laser scanner is positioned on the front of the robot, on its base. Sitting at a height of \unit[30]{cm} above the ground, the laser scanner scans on a level plane. Obstacles shorter than \unit[30]{cm}, that lie outside of the laser's view, are essentially driven over or driven through. During the demonstration, the robot drove into a brick wall which was just below the laser scanner's view. The robot was also sometimes confused when variations in the gradient of the ground saw it to believe that obstacles were nearby, such as on grassed areas where the laser scanner would detect the grass. The laser scanner's limited view also meant that care had to be taken when the robot was undergoing sharp turns, and this limited its range of motion.\\
 
 \textbf{Laser Scanner Interference}
 
-Obstacle avoidance relies entirely on data received from the laser scanner. In areas with reflective surfaces (e.g. mirrors and glass), the reflection interferes with the laser, causing the robot to think there are obstacles even when the path is clear.
+Obstacle avoidance relies entirely on data received from the laser scanner. In areas with reflective surfaces (e.g. mirrors and glass), the reflection interferes with the laser, causing the robot to think there are obstacles even when the path is clear. This caused the robot to think that certain paths were blocked and try to go around non-existent obstacles. A fix was attempted that involved filtering out detected obstacles the size of only one point, which somewhat improved navigation.
 
 \pagebreak
-\section{Conclusion?}
-
 \section{Future Work and Improvements}
-TODO: Make this look better
+
+A number of improvements are possible in future revisions of the software on the UGV to enhance navigation capabilities and increase its potential as a platform for research and development. These include:
+
 \begin{itemize}
-	\item Add depth sensor on front such as Kinect to sense ledges and different terrain
-	\item Add odometry to better track the movement of the robot
-	\item Implement an EKF with the odometry to improve errors in positioning
-	\item Add a sensor on the rear to allow for autonomous reversing
-	\item Implement map-based localisation and navigation for better path planning
-	\item Extend navigation into indoor environments and manage transition between outdoor and indoor settings
+	\item Adding a depth sensor on front such as Kinect to sense ledges and different terrain.
+	\item Adding odometry to better track the movement of the robot.
+	\item Implementing an EKF with the odometry to improve errors in positioning.
+	\item Adding a sensor on the rear to allow for autonomous reversing.
+	\item Implementing map-based localisation and navigation for better path planning.
+	\item Extending navigation into indoor environments and manage transition between outdoor and indoor settings.
 \end{itemize}
 
 \pagebreak
