@@ -1,4 +1,4 @@
-Last edited: 15/10/2015
+Last edited: 22/02/2016
 
 Welcome to the UGV_ROS repository.
 
@@ -8,14 +8,11 @@ Install ROS indigo on any linux OS, preferably Ubuntu Trusty (14.04).
 
 THIS REPOSITORY is a catkin workspace. To build, use catkin_make.
 
-All done! Use rosrun or roslaunch to start running programs
-
-Useful commands:
+Launch commands commands:
 roscore
 sudo xboxdrv --detach-kernel-driver --quiet | rosrun ugv_nav controller_get
-rosrun ugv_nav motordata_arduino_send /dev/ttyACM0
+roslaunch ugv_nav oweek_ugv.launch
 
+Note: Arduino needs to be on ttyACM0, otherwise please modify motordata_arduino_send.cpp.
 if arduino has used a different port, in third terminal run: ls /dev | grep ttyACM
-
-A launch file is in the process of being built. Stay tuned for further run instructions.
 

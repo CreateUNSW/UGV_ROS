@@ -38,21 +38,25 @@ private:
    ros::Publisher safe_pub;
    ros::Publisher movement_pub;
    ros::Subscriber heading_sub;
+   ros::Subscriber speed_sub;
    ros::Subscriber laser_sub;
    ros::Subscriber arrived_sub;
    void laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg);
    void heading_callback(const std_msgs::Float32::ConstPtr& msg);
+   void speed_callback(const std_msgs::Float32::ConstPtr& msg);
    void arrived_callback(const std_msgs::Bool::ConstPtr& msg);
    obstacle_type inRange(vector<float> ranges) const;
    int getClosestSafePoint(vector<float> ranges) const;
    int getBestHeading(vector<float> ranges, int desired_heading) const;
-   int desired_heading; //degrees
+   int desired_heading = 0; //degrees
+   float desired_speed = 0;
    bool continue_driving = false;
 };
 
 Laser::Laser(ros::NodeHandle n) : n{n} {
    laser_sub = n.subscribe("/scan", 1, &Laser::laser_callback, this);
    heading_sub = n.subscribe("/ugv_nav/desired_heading", 1, &Laser::heading_callback, this);
+   speed_sub = n.subscribe("/ugv_nav/desired_speed", 1, &Laser::speed_callback, this);
    arrived_sub = n.subscribe("/ugv_nav/arrived", 1, &Laser::arrived_callback, this);
    movement_pub = n.advertise<ugv_nav::Movement>("/ugv_nav/movement", 1);
 
@@ -90,7 +94,7 @@ void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
       } else if (heading_deg <= -180){
          heading_deg += 360;
       }
-      
+
       heading_deg = fmin(heading_deg,MAX_TURNING_ANGLE);
       heading_deg = fmax(heading_deg,-MAX_TURNING_ANGLE);
       // Turn to radians
@@ -99,16 +103,20 @@ void Laser::laser_callback(const sensor_msgs::LaserScan::ConstPtr& msg) {
       // Publish a movement message to swerve around the obstacle
 
       movement_msg.heading = heading_rad;
-      movement_msg.magnitude = 0.7;
+      movement_msg.magnitude = desired_speed;
       movement_pub.publish(movement_msg);
    } else if(currentView==TOO_CLOSE){
       printf("Too close!\n");
    }
 }
 
-void Laser::heading_callback(const std_msgs::Float32::ConstPtr & msg){
+void Laser::heading_callback(const std_msgs::Float32::ConstPtr& msg){
    desired_heading = (int)msg->data;
    continue_driving = true;
+}
+
+void Laser::speed_callback(const std_msgs::Float32::ConstPtr& msg){
+   desired_speed = (float)msg->data;
 }
 
 void Laser::arrived_callback(const std_msgs::Bool::ConstPtr& msg){

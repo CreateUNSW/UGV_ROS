@@ -29,8 +29,9 @@ int main(int argc, char** argv){
 
    // Message to publish
     ugv_nav::Movement movement_msg;
-    ros::Publisher movement_publisher = n.advertise<ugv_nav::Movement>("/ugv_nav/movement", 1);
-
+    //ros::Publisher movement_publisher = n.advertise<ugv_nav::Movement>("/ugv_nav/movement", 1);
+    ros::Publisher desired_heading_pub = n.advertise<std_msgs::Float32>("/ugv_nav/desired_heading", 1);
+    ros::Publisher desired_speed_pub = n.advertise<std_msgs::Float32>("/ugv_nav/desired_speed", 1);
 
    while(ros::ok()){
       time(&curTime);
@@ -69,10 +70,12 @@ int main(int argc, char** argv){
       movement_msg.magnitude = sqrt(num[0]*num[0] + num[1]*num[1])/32768.0;
       //n.setParam("magnitude",sqrt(num[0]*num[0] + num[1]*num[1])/32768.0);
 
-      movement_publisher.publish(movement_msg);
+      //movement_publisher.publish(movement_msg);
+      desired_heading_pub.publish(movement_msg.heading);
+      desired_speed_pub.publish(movement_msg.magnitude);
       ros::spinOnce();
    }
    return (0);
 
-} 
+}
 
