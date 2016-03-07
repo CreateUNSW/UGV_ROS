@@ -11,6 +11,7 @@ THIS REPOSITORY is a catkin workspace. To build, use catkin_make.
 Launch commands commands:
 roscore
 sudo xboxdrv --detach-kernel-driver --quiet | rosrun ugv_nav controller_get
+roslaunch sick_tim sick_tim551_2050001.launch
 roslaunch ugv_nav oweek_ugv.launch
 
 Note: Arduino needs to be on ttyACM0, otherwise please modify motordata_arduino_send.cpp.

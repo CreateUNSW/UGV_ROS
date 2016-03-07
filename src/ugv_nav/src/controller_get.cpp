@@ -74,7 +74,7 @@ int main(int argc, char** argv){
 
       movement_msg.magnitude.data = sqrt(num[0]*num[0] + num[1]*num[1])/32768.0;
       //n.setParam("magnitude",sqrt(num[0]*num[0] + num[1]*num[1])/32768.0);
-
+		movement_msg.heading.data *= 180/M_PI;
       //movement_publisher.publish(movement_msg);
       desired_heading_pub.publish(movement_msg.heading);
       desired_speed_pub.publish(movement_msg.magnitude);
