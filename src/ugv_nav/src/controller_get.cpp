@@ -11,7 +11,7 @@
 #include <ctime>
 #include <std_msgs/Float32.h>
 
-//#include "ugv_nav/Movement.h"
+#include "ugv_nav/Movement.h"
 
 #define KILL_TIMER 0.0
 
@@ -29,14 +29,22 @@ int main(int argc, char** argv){
    string line;
 
    // Message to publish
-    //ugv_nav::Movement movement_msg;
-	 struct movement_MSG {
-		 std_msgs::Float32 heading;
-		 std_msgs::Float32 magnitude;
-    } movement_msg;
-    //ros::Publisher movement_publisher = n.advertise<ugv_nav::Movement>("/ugv_nav/movement", 1);
-    ros::Publisher desired_heading_pub = n.advertise<std_msgs::Float32>("/ugv_nav/desired_heading", 1);
-    ros::Publisher desired_speed_pub = n.advertise<std_msgs::Float32>("/ugv_nav/desired_speed", 1);
+
+   // FOR DIRECT TO MOTORS
+    ugv_nav::Movement movement_msg;
+   
+    // FOR VIA LASER SCANNER
+    //struct movement_MSG {
+	//	 std_msgs::Float32 heading;
+	//	 std_msgs::Float32 magnitude;
+    //} movement_msg;
+
+    // FOR DIRECT TO MOTORS
+    ros::Publisher movement_publisher = n.advertise<ugv_nav::Movement>("/ugv_nav/movement", 1);
+    
+    // FOR VIA LASER SCANNER
+    //ros::Publisher desired_heading_pub = n.advertise<std_msgs::Float32>("/ugv_nav/desired_heading", 1);
+    //ros::Publisher desired_speed_pub = n.advertise<std_msgs::Float32>("/ugv_nav/desired_speed", 1);
 
    while(ros::ok()){
       time(&curTime);
@@ -62,22 +70,40 @@ int main(int argc, char** argv){
       // Put this data into /heading and /magnitude
       // X1 and Y1 are the ones we want
       if (num[1] >= 0){
-         movement_msg.heading.data = atan(num[0]/(float)num[1]);
-         //n.setParam("heading",atan(num[0]/(float)num[1]));
+         //movement_msg.heading.data = atan(num[0]/(float)num[1]);
+         
+	 // FOR DIRECT TO MOTORS
+	 movement_msg.heading = atan(num[0]/(float)num[1]);
       } else if (num[0] >= 0) {
-         movement_msg.heading.data = 3.14159 + atan(num[0]/(float)num[1]);
-         //n.setParam("heading",3.14159 + atan(num[0]/(float)num[1]));
+         // FOR VIA LASER SCANNER
+         //movement_msg.heading.data = 3.14159 + atan(num[0]/(float)num[1]);
+         
+         // FOR DIRECT TO MOTORS
+         movement_msg.heading = 3.14159 + atan(num[0]/(float)num[1]);
       } else {
-         //n.setParam("heading", -3.14159 + atan(num[0]/(float)num[1]));
-         movement_msg.heading.data = -3.14159 + atan(num[0]/(float)num[1]);
+
+	 // FOR DIRECT TO MOTORS
+         movement_msg.heading = -3.14159 + atan(num[0]/(float)num[1]);
+         
+	 // FOR VIA LASER SCANNER
+	 //movement_msg.heading.data = -3.14159 + atan(num[0]/(float)num[1]);
       }
 
-      movement_msg.magnitude.data = sqrt(num[0]*num[0] + num[1]*num[1])/32768.0;
+      //movement_msg.magnitude.data = sqrt(num[0]*num[0] + num[1]*num[1])/32768.0;
+	   movement_msg.magnitude = sqrt(num[0]*num[0] + num[1]*num[1])/32768.0;
+           //std::cout << movement_msg.magnitude << std::endl;
+      // THE FOLLOWING LINE OF CODE IS TO SLOW UGV FOR ENG NIGHT
+      movement_msg.magnitude*=0.7 ;
+
       //n.setParam("magnitude",sqrt(num[0]*num[0] + num[1]*num[1])/32768.0);
-		movement_msg.heading.data *= 180/M_PI;
-      //movement_publisher.publish(movement_msg);
-      desired_heading_pub.publish(movement_msg.heading);
-      desired_speed_pub.publish(movement_msg.magnitude);
+	//	movement_msg.heading.data *= 180/M_PI;
+      
+      // FOR DIRECT TO MOTORS
+      movement_publisher.publish(movement_msg);
+
+      // FOR VIA LASER SCANNER
+      //desired_heading_pub.publish(movement_msg.heading);
+      //desired_speed_pub.publish(movement_msg.magnitude);
       ros::spinOnce();
    }
    return (0);

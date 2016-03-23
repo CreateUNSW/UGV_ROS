@@ -1,0 +1,3 @@
+<launch>
+    <node name="motornav_com" pkg="ugv_nav" type="motordata_arduino_send" output="screen"/>
+</launch>
